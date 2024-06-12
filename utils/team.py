@@ -1,7 +1,7 @@
 import copy
 
-from utils.pokemon import Pokemon
-from utils.move import Move
+from pokemon import Pokemon
+from move import Move
 
 class Team:
     def __init__(self, name: str, pokemons: list[Pokemon], starter: int=0):
