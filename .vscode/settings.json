@@ -1,0 +1,11 @@
+{
+    "terminal.integrated.env.windows": {
+    "PYTHONPATH": "${workspaceFolder}${pathSeparator}data;${workspaceFolder}${pathSeparator}program;${workspaceFolder}${pathSeparator}utils"
+    },
+    "python.envFile": "${workspaceFolder}${pathSeparator}.env",
+    "python.analysis.extraPaths": [
+        "./utils",
+        "./program",
+        "./data"
+    ]
+}
