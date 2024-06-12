@@ -1,10 +1,10 @@
 import random
 
-from utils.pokemon import Pokemon
+from pokemon import Pokemon
 
-from utils.move import Move
+from move import Move
 
-from utils.team import Team
+from team import Team
 
 #Almaceno todas los pokemones en una lista 
 
