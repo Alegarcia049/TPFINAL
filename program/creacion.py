@@ -63,11 +63,12 @@ def crear_teams(num_equipos:int, pokemones:list[str]):
         teams.append(equipo)
     return teams
 
-def imprimir_equipos(poblacion): #Auxiliar
-    for i, equipo in enumerate(poblacion, start=1):
-        print(f'Equipo {i}:')
-        for pokemon in equipo.pokemons:
-            print(pokemon.name)
+def imprimir_dict_equipos(dict_victorias):
+    for equipo, victorias in dict_victorias.items():
+        print(f"Equipo: {equipo.name}, Victorias: {victorias}")
+        print("Pokémon en el equipo:")
+        for pokemon in equipo.pokemons: 
+            print(f"- {pokemon.name}")
 
 def peleas_y_puntos(poblacion, rivales, effectiveness_dict):
     victorias = {}
@@ -100,65 +101,73 @@ def actualizar_poblacion(poblacion: list[Team], victorias_ordenadas: dict[Team, 
 
     return poblacion, mejores_equipos
 
-def mezclar_equipos(poblacion):
-    
-    nueva_poblacion = []
+def cruza_equipos(poblacion):
+    poblacion_cruzada = []
+    while True:
+        if len(poblacion) == 0: 
+            break
 
-    while len(poblacion) >= 2:
+        #Extraigo dos equipos randoms de la poblacion
+        indice1 = random.randint(0, len(poblacion)-1)
+        team1 = poblacion.pop(indice1)
 
-        equipo1, equipo2 = random.sample(poblacion, 2)
+        
+        indice2 = random.randint(0,len(poblacion)-1)
+        team2 = poblacion.pop(indice2)
 
-        if random.random() < 0.7:
-            
-            equipo_unido = list(equipo1) + list(equipo2)
+        #Creo un corte random de la cantidad de pokemones
+        cut = random.randint(0,5)
 
-            nuevo_equipo1 = []
-            nuevo_equipo2 = []
+        nuevo_team1 = team1.pokemons[0:cut+1] + team2.pokemons[cut+1:]
+        nuevo_team2 = team1.pokemons[cut+1:] + team2.pokemons[:cut+1]
 
-            for pokemon in equipo_unido:
-                if len(nuevo_equipo1) < 6 and pokemon not in nuevo_equipo1:
-                    nuevo_equipo1.append(pokemon)
-                elif len(nuevo_equipo2) < 6 and pokemon not in nuevo_equipo2:
-                    nuevo_equipo2.append(pokemon)
+        #Chequeo repetidos
+        if len(set(pokemon.name for pokemon in nuevo_team1)) < 6 or len(set(pokemon.name for pokemon in nuevo_team2)) < 6:
+            joined_teams = nuevo_team1 + nuevo_team2
+            random.shuffle(joined_teams)
 
-            # Agregar los nuevos equipos a la nueva población
-            nueva_poblacion.append(nuevo_equipo1)
-            nueva_poblacion.append(nuevo_equipo2)
-        else:
-            # Si no se mezclan, agregar los equipos originales a la nueva población
-            nueva_poblacion.append(equipo1)
-            nueva_poblacion.append(equipo2)
+            nuevo_team1 = []
+            nuevo_team2 = []
 
-        # Remover los equipos seleccionados de la población
-        poblacion.remove(equipo1)
-        poblacion.remove(equipo2)
+            for pokemon in joined_teams:
+                if pokemon not in nuevo_team1 and len(nuevo_team1) < 6:
+                    nuevo_team1.append(pokemon)
+                elif pokemon not in nuevo_team2 and len(nuevo_team2) < 6:
+                    nuevo_team2.append(pokemon)
+        
+        poblacion_cruzada.append(Team(f'Hijo de {team1.name} y {team2.name}',nuevo_team1))
+        poblacion_cruzada.append(Team(f'Hijo de {team2.name} y {team1.name}',nuevo_team2))
 
-    return nueva_poblacion
+    return poblacion_cruzada
 
 def mutar(equipo):
     prob = random.random()
-
+    lista_equipo = [pokemon.name for pokemon in equipo.pokemons]  # Lista de nombres de Pokémon en el equipo
     if prob <= 0.03:
         tipo_mutacion = random.randint(1, 3)
 
         if tipo_mutacion == 1:
             # Cambiar el Pokémon inicial por un Pokémon aleatorio
             nuevo_pokemon = crear_pokemon(pokemones[random.randint(0, len(pokemones) - 1)])
-            # Verifico que no haya pokemones repetidos
-            while nuevo_pokemon in equipo: 
+    
+            while nuevo_pokemon.name in lista_equipo:
                 nuevo_pokemon = crear_pokemon(pokemones[random.randint(0, len(pokemones) - 1)])
-            equipo[0] = nuevo_pokemon
+            equipo.pokemons[0] = nuevo_pokemon
+            lista_equipo[0] = nuevo_pokemon.name  # Actualizar la lista de nombres
         elif tipo_mutacion == 2:
             # Cambiar el Pokémon inicial por otro Pokémon del equipo
-            indice = random.randint(1, len(equipo) - 1)
-            equipo[0], equipo[indice] = equipo[indice], equipo[0]
+            indice = random.randint(1, 5)
+            equipo.pokemons[0], equipo.pokemons[indice] = equipo.pokemons[indice], equipo.pokemons[0]
+            lista_equipo[0], lista_equipo[indice] = lista_equipo[indice], lista_equipo[0]  
         else:
             # Seleccionar un Pokémon aleatorio del equipo y cambiarlo por un Pokémon aleatorio
-            indice = random.randint(0, len(equipo) - 1)
+            indice = random.randint(0, 5)
             nuevo_pokemon = crear_pokemon(pokemones[random.randint(0, len(pokemones) - 1)])
-            while nuevo_pokemon in equipo:
+            
+            while nuevo_pokemon.name in lista_equipo:
                 nuevo_pokemon = crear_pokemon(pokemones[random.randint(0, len(pokemones) - 1)])
-            equipo[indice] = nuevo_pokemon
+            equipo.pokemons[indice] = nuevo_pokemon
+            lista_equipo[indice] = nuevo_pokemon.name  
 
     return equipo
 
@@ -169,16 +178,6 @@ def mutar_poblacion(poblacion):
         poblacion[i] = mutar(poblacion[i])
     
     return poblacion
-
-def imprimir_dict_equipos(victorias_combinadas_ordenadas, poblacion_seleccionada):
-    contador = 0
-    for equipo, victorias in victorias_combinadas_ordenadas.items():
-        print(f"Equipo: {equipo}, Victorias: {victorias}")
-        for pokemon in poblacion_seleccionada[equipo]:
-            print(f"Pokémon: {pokemon}")
-        contador += 1
-        if contador == 50:
-            break
 
 #-------------------------------------------------------------------------------------------------------
 #LECTURA DE DATOS
@@ -214,19 +213,19 @@ def algoritmo_genetico(poblacion, rivales, dicc_efectividad):
     #-------------------------------------------------------------------------------------------------------
     #CRUZA (MEZCLA LOS EQUIPOS CON UNA PROBABILIDAD DE 70%)
     #-------------------------------------------------------------------------------------------------------
-    poblacion_criada = mezclar_equipos(poblacion_actualizada)
+    poblacion_criada = cruza_equipos(poblacion_actualizada)
     pbar.update()
     #-------------------------------------------------------------------------------------------------------
     #MUTACION
     #-------------------------------------------------------------------------------------------------------
-    poblacion_mutada = mutar_poblacion(poblacion_criada)
+    poblacion_cruzada = mutar_poblacion(poblacion_criada)
     pbar.update()
     #-------------------------------------------------------------------------------------------------------
     #MEJORA DEL ALGORITMO GENETICO
     #-------------------------------------------------------------------------------------------------------
     #APTITUDES de cada TEAM (HIJOS) (PELEAS Y PUNTOS)
     #-------------------------------------------------------------------------------------------------------
-    victorias_hijos_ordenada = peleas_y_puntos(poblacion_mutada, rivales, dicc_efectividad)
+    victorias_hijos_ordenada = peleas_y_puntos(poblacion_cruzada, rivales, dicc_efectividad)
     pbar.update()
     #-------------------------------------------------------------------------------------------------------
     # COMBINO LOS EQUIPOS PADRES Y HIJOS Y ORDENO DE MAYOR A MENOR
@@ -247,11 +246,6 @@ def algoritmo_genetico(poblacion, rivales, dicc_efectividad):
     
 nueva_poblacion, nuevos_rivales, dict_vict_combinadas = algoritmo_genetico(poblacion, rivales, dicc_efectividad)
 
-imprimir_dict_equipos(dict_vict_combinadas, nueva_poblacion)
-
-
-
-
-
+imprimir_dict_equipos(dict_vict_combinadas)
 
 
