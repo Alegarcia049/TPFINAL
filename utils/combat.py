@@ -1,4 +1,4 @@
-from utils.team import Team
+from team import Team
 
 def __faint_change__(team1: Team, team2: Team, effectiveness: dict[str, dict[str, float]]) -> None:
     """
