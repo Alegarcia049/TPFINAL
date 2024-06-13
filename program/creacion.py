@@ -94,7 +94,7 @@ def actualizar_poblacion(poblacion: list[Team], victorias_ordenadas: dict[Team, 
     poblacion = mejores_equipos + nuevos_equipos
 
     return poblacion, mejores_equipos
-
+#MODIFICAR MANGA DE PUTOS
 def cruza_equipos(poblacion):
     poblacion_cruzada = []
     while len(poblacion) > 1:
@@ -180,9 +180,9 @@ ataques = lectura_pokemones('./data/moves.csv')
 
 efectividad = lectura_pokemones('./data/effectiveness_chart.csv')
 
-poblacion = crear_teams(20, pokemones)
+poblacion = crear_teams(50, pokemones)
 
-rivales = crear_teams(40, pokemones)
+rivales = crear_teams(400, pokemones)
 
 dicc_efectividad = crear_dict_efectividad(efectividad)
 #-------------------------------------------------------------------------------------------------------
