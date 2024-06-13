@@ -83,12 +83,6 @@ def peleas_y_puntos(poblacion, rivales, effectiveness_dict):
     
     victorias_ordenadas = dict(sorted(victorias.items(), key=lambda item: item[1], reverse=True))
 
-    for equipo, victorias in victorias_ordenadas.items():
-        print(f'El equipo {equipo.name} ha ganado {victorias} veces.')
-        print('Pokémon en este equipo:')
-        for pokemon in equipo.pokemons:  
-            print(pokemon.name)
-
     return victorias_ordenadas
 
 def actualizar_poblacion(poblacion: list[Team], victorias_ordenadas: dict[Team, int]):
@@ -103,40 +97,41 @@ def actualizar_poblacion(poblacion: list[Team], victorias_ordenadas: dict[Team, 
 
 def cruza_equipos(poblacion):
     poblacion_cruzada = []
-    while True:
-        if len(poblacion) == 0: 
-            break
-
-        #Extraigo dos equipos randoms de la poblacion
+    while len(poblacion) > 1:
+        # Extraigo dos equipos randoms de la poblacion
         indice1 = random.randint(0, len(poblacion)-1)
         team1 = poblacion.pop(indice1)
 
-        
-        indice2 = random.randint(0,len(poblacion)-1)
+        indice2 = random.randint(0, len(poblacion)-1)
         team2 = poblacion.pop(indice2)
 
-        #Creo un corte random de la cantidad de pokemones
-        cut = random.randint(0,5)
+        # Creo un corte random de la cantidad de pokemones
+        cut = random.randint(0, 5)
 
-        nuevo_team1 = team1.pokemons[0:cut+1] + team2.pokemons[cut+1:]
-        nuevo_team2 = team1.pokemons[cut+1:] + team2.pokemons[:cut+1]
+        nuevo_team1_pokemons = team1.pokemons[:cut] + team2.pokemons[cut:]
+        nuevo_team2_pokemons = team2.pokemons[:cut] + team1.pokemons[cut:]
 
-        #Chequeo repetidos
-        if len(set(pokemon.name for pokemon in nuevo_team1)) < 6 or len(set(pokemon.name for pokemon in nuevo_team2)) < 6:
-            joined_teams = nuevo_team1 + nuevo_team2
-            random.shuffle(joined_teams)
+        # Función para asegurar que el equipo tenga 6 pokémones únicos
+        def asegurar_unicos(nuevo_team):
+            nombres_vistos = set()
+            equipo_unico = []
+            for pokemon in nuevo_team:
+                if pokemon.name not in nombres_vistos:
+                    equipo_unico.append(pokemon)
+                    nombres_vistos.add(pokemon.name)
+            while len(equipo_unico) < 6:
+                nuevo_pokemon = crear_pokemon(pokemones[random.randint(0, len(pokemones) - 1)])
+                if nuevo_pokemon.name not in nombres_vistos:
+                    equipo_unico.append(nuevo_pokemon)
+                    nombres_vistos.add(nuevo_pokemon.name)
+            return equipo_unico
 
-            nuevo_team1 = []
-            nuevo_team2 = []
+        # Asegurar que ambos equipos tengan 6 pokémones únicos
+        nuevo_team1_pokemons = asegurar_unicos(nuevo_team1_pokemons)
+        nuevo_team2_pokemons = asegurar_unicos(nuevo_team2_pokemons)
 
-            for pokemon in joined_teams:
-                if pokemon not in nuevo_team1 and len(nuevo_team1) < 6:
-                    nuevo_team1.append(pokemon)
-                elif pokemon not in nuevo_team2 and len(nuevo_team2) < 6:
-                    nuevo_team2.append(pokemon)
-        
-        poblacion_cruzada.append(Team(f'Hijo de {team1.name} y {team2.name}',nuevo_team1))
-        poblacion_cruzada.append(Team(f'Hijo de {team2.name} y {team1.name}',nuevo_team2))
+        poblacion_cruzada.append(Team(team1.name, nuevo_team1_pokemons))
+        poblacion_cruzada.append(Team(team2.name, nuevo_team2_pokemons))
 
     return poblacion_cruzada
 
@@ -179,72 +174,67 @@ def mutar_poblacion(poblacion):
     
     return poblacion
 
-#-------------------------------------------------------------------------------------------------------
-#LECTURA DE DATOS
-#-------------------------------------------------------------------------------------------------------
 pokemones = lectura_pokemones('./data/pokemons.csv')
 
 ataques = lectura_pokemones('./data/moves.csv')
 
 efectividad = lectura_pokemones('./data/effectiveness_chart.csv')
-#-------------------------------------------------------------------------------------------------------
-#CREACION DE POBLACION Y RIVALES
-#-------------------------------------------------------------------------------------------------------
-poblacion = crear_teams(50, pokemones)
 
-rivales = crear_teams(100, pokemones)
-#-------------------------------------------------------------------------------------------------------
-#CREACION DE DICCIONARIO DE EFECTIVIDAD
-#-------------------------------------------------------------------------------------------------------
+poblacion = crear_teams(20, pokemones)
+
+rivales = crear_teams(40, pokemones)
+
 dicc_efectividad = crear_dict_efectividad(efectividad)
 #-------------------------------------------------------------------------------------------------------
 def algoritmo_genetico(poblacion, rivales, dicc_efectividad):
-    pbar = tqdm(total=7, desc="Algoritmo genético", ncols=100)
     #-------------------------------------------------------------------------------------------------------
     #APTITUDES de cada TEAM (PADRES) (PELEAS Y PUNTOS)
     #-------------------------------------------------------------------------------------------------------
     victorias_ordenadas= peleas_y_puntos(poblacion, rivales, dicc_efectividad)
-    pbar.update()
+
     #-------------------------------------------------------------------------------------------------------
     #SELECCION (SELECCIONA LOS MEJORES 20 EQUIPOS Y CREA 30 EQUIPOS RANDOMS) (ALMACENA LOS MEJORES 20)
     #-------------------------------------------------------------------------------------------------------
     poblacion_actualizada, futuros_rivales = actualizar_poblacion(poblacion, victorias_ordenadas)
-    pbar.update()
+    
     #-------------------------------------------------------------------------------------------------------
     #CRUZA (MEZCLA LOS EQUIPOS CON UNA PROBABILIDAD DE 70%)
     #-------------------------------------------------------------------------------------------------------
     poblacion_criada = cruza_equipos(poblacion_actualizada)
-    pbar.update()
+    
     #-------------------------------------------------------------------------------------------------------
     #MUTACION
     #-------------------------------------------------------------------------------------------------------
     poblacion_cruzada = mutar_poblacion(poblacion_criada)
-    pbar.update()
+    
     #-------------------------------------------------------------------------------------------------------
     #MEJORA DEL ALGORITMO GENETICO
     #-------------------------------------------------------------------------------------------------------
     #APTITUDES de cada TEAM (HIJOS) (PELEAS Y PUNTOS)
     #-------------------------------------------------------------------------------------------------------
     victorias_hijos_ordenada = peleas_y_puntos(poblacion_cruzada, rivales, dicc_efectividad)
-    pbar.update()
+    
     #-------------------------------------------------------------------------------------------------------
     # COMBINO LOS EQUIPOS PADRES Y HIJOS Y ORDENO DE MAYOR A MENOR
     #-------------------------------------------------------------------------------------------------------
     victorias_combinadas = {**victorias_ordenadas, **victorias_hijos_ordenada}
 
     victorias_combinadas_ordenadas = dict(sorted(victorias_combinadas.items(), key=lambda item: item[1], reverse=True))
-    pbar.update()
+    
     #-------------------------------------------------------------------------------------------------------
     #SELECCION DE POBLACION Y RIVALES QUE CONTINUAN A LA PROXIMA GENERACION
     #-------------------------------------------------------------------------------------------------------
     poblacion_seleccionada = list(victorias_combinadas_ordenadas.keys())[:50] #ELIJO LOS MEJORES 50 EQUIPOS
 
     rivales_prox_gen = rivales[20:] + futuros_rivales #MEJORO LOS RIVALES CON BUENOS EQUIPOS 
-    pbar.update()
-    pbar.close()
+    
     return poblacion_seleccionada, rivales_prox_gen, victorias_combinadas_ordenadas
     
-nueva_poblacion, nuevos_rivales, dict_vict_combinadas = algoritmo_genetico(poblacion, rivales, dicc_efectividad)
+for _ in tqdm(range(50), desc="Procesando generaciones"):
+    nueva_poblacion, nuevos_rivales, dict_vict_combinadas = algoritmo_genetico(poblacion, rivales, dicc_efectividad)
+    poblacion = nueva_poblacion
+    rivales = nuevos_rivales
+    print(f'Generación {_+1}')
 
 imprimir_dict_equipos(dict_vict_combinadas)
 
