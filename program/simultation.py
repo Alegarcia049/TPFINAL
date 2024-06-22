@@ -1,5 +1,6 @@
 import pygame
 import os
+import combat
 
 pygame.init()
 pygame.display.set_caption('SIMU')
@@ -86,7 +87,12 @@ def select_kanto_champs()->str:
 def select_starter():
     pass
 def fight():
+    draw_bg('battle_bg.jpg')
+    while True:
+        pygame.display.update()
+
     pass
+
 def winner():
     pass
 def check_quit():
