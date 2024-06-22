@@ -75,10 +75,9 @@ def crear_pokemon(pokemones: list[str], lista_moves: list):
         obj_moves = crear_movimientos(moves,lista_moves)
         level = 50
         
-        pokemon = Pokemon(pokedex_number, name, type1, type2, hp, attack, deffense, sp_attack, sp_defense, speed, generation, height, weight, is_legendary, obj_moves, level)
+        return Pokemon(pokedex_number, name, type1, type2, hp, attack, deffense, sp_attack, sp_defense, speed, generation, height, weight, is_legendary, obj_moves, level)
 
-        if not pokemon.is_legendary:
-            return pokemon
+        
             
 def crear_equipo(pokemones: list[str], lista_moves):
     equipo = []
@@ -86,10 +85,13 @@ def crear_equipo(pokemones: list[str], lista_moves):
         if len(equipo) == 6:
             break
         pokemon = crear_pokemon(pokemones, lista_moves)
+
         if not (pokemon.name in set(pokemon.name for pokemon in equipo)):
-            equipo.append(pokemon)
+            if pokemon.is_legendary == True:
+                equipo.append(pokemon)
         else:
             continue
+        
     return Team("Name",equipo)
 
 def crear_poblaciones(cant_equipos: int, pokemones:list[str], lista_moves):
@@ -168,8 +170,8 @@ def cruza_equipos(poblacion, pokemones, lista_moves):
             nuevo_team2 = team1.pokemons[cut+1:] + team2.pokemons[:cut+1]
         #Caso, contrario, se mantienen iguales
         else:
-            nuevo_team1 = team1
-            nuevo_team2 = team2
+            nuevo_team1 = team1.pokemons[:]
+            nuevo_team2 = team2.pokemons[:]
             
         #Asegurar que ambos equipos tengan 6 pokémones únicos
         nuevo_team1 = asegurar_unicos(nuevo_team1,pokemones,lista_moves)

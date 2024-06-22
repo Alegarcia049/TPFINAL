@@ -11,16 +11,20 @@ from tqdm import tqdm
 lista_moves = lista_movimientos()
 pokemones = lista_pokemones()
 efectividad = create_effectiveness_dict()
+
+
       
 #Parametros iniciales
 poblacion_inicial = 50
-cant_rivales  = 50
+cant_rivales  = 100
 corte_seleccion = 25
-generaciones = 25
+generaciones = 30
 
 #Creo poblacion inicial y rivales
 poblacion = crear_poblaciones(poblacion_inicial , pokemones, lista_moves)
 rivales = crear_poblaciones(cant_rivales , pokemones, lista_moves)
+
+print("Comienza el algoritmo genetico")
 
 def algoritmo_genetico(lista_moves, pokemones, efectividad, poblacion, rivales):
     #Simulo las batallas y extraigo las estadisticas
