@@ -10,6 +10,8 @@ from team import Team
 
 from combat import *
 
+import csv
+
 def lectura_pokemones(archivo:str):
     with open(archivo, 'r') as file:
         pokemones = file.readlines()[1:]
@@ -87,15 +89,28 @@ def peleas_y_puntos(poblacion, rivales, effectiveness_dict):
 
 def actualizar_poblacion(poblacion: list[Team], victorias_ordenadas: dict[Team, int]):
     # Seleccionar los 20 mejores equipos
-    mejores_equipos = list(victorias_ordenadas.keys())[:20]
+    mejores_equipos = list(victorias_ordenadas.keys())[:25]
     # Generar 30 equipos randoms
-    nuevos_equipos = crear_teams(30, pokemones)
+    nuevos_equipos = crear_teams(25, pokemones)
     # Actualizar la poblacion
     poblacion = mejores_equipos + nuevos_equipos
 
     return poblacion, mejores_equipos
 
-#MODIFICAR MANGA DE PUTOS
+def asegurar_unicos(nuevo_team):
+            nombres_vistos = set()
+            equipo_unico = []
+            for pokemon in nuevo_team:
+                if pokemon.name not in nombres_vistos:
+                    equipo_unico.append(pokemon)
+                    nombres_vistos.add(pokemon.name)
+            while len(equipo_unico) < 6:
+                nuevo_pokemon = crear_pokemon(pokemones[random.randint(0, len(pokemones) - 1)])
+                if nuevo_pokemon.name not in nombres_vistos and not nuevo_pokemon.is_legendary:
+                    equipo_unico.append(nuevo_pokemon)
+                    nombres_vistos.add(nuevo_pokemon.name)
+            return equipo_unico
+
 def cruza_equipos(poblacion):
     poblacion_cruzada = []
     while len(poblacion) > 1:
@@ -111,21 +126,6 @@ def cruza_equipos(poblacion):
 
         nuevo_team1_pokemons = team1.pokemons[:cut] + team2.pokemons[cut:]
         nuevo_team2_pokemons = team2.pokemons[:cut] + team1.pokemons[cut:]
-
-        # Función para asegurar que el equipo tenga 6 pokémones únicos
-        def asegurar_unicos(nuevo_team):
-            nombres_vistos = set()
-            equipo_unico = []
-            for pokemon in nuevo_team:
-                if pokemon.name not in nombres_vistos:
-                    equipo_unico.append(pokemon)
-                    nombres_vistos.add(pokemon.name)
-            while len(equipo_unico) < 6:
-                nuevo_pokemon = crear_pokemon(pokemones[random.randint(0, len(pokemones) - 1)])
-                if nuevo_pokemon.name not in nombres_vistos and not nuevo_pokemon.is_legendary:
-                    equipo_unico.append(nuevo_pokemon)
-                    nombres_vistos.add(nuevo_pokemon.name)
-            return equipo_unico
 
         # Asegurar que ambos equipos tengan 6 pokémones únicos
         nuevo_team1_pokemons = asegurar_unicos(nuevo_team1_pokemons)
@@ -183,7 +183,7 @@ efectividad = lectura_pokemones('./data/effectiveness_chart.csv')
 
 poblacion = crear_teams(50, pokemones)
 
-rivales = crear_teams(400, pokemones)
+rivales = crear_teams(50, pokemones)
 
 dicc_efectividad = crear_dict_efectividad(efectividad)
 #-------------------------------------------------------------------------------------------------------
@@ -209,8 +209,6 @@ def algoritmo_genetico(poblacion, rivales, dicc_efectividad):
     poblacion_cruzada = mutar_poblacion(poblacion_criada)
     
     #-------------------------------------------------------------------------------------------------------
-    #MEJORA DEL ALGORITMO GENETICO
-    #-------------------------------------------------------------------------------------------------------
     #APTITUDES de cada TEAM (HIJOS) (PELEAS Y PUNTOS)
     #-------------------------------------------------------------------------------------------------------
     victorias_hijos_ordenada = peleas_y_puntos(poblacion_cruzada, rivales, dicc_efectividad)
@@ -227,16 +225,85 @@ def algoritmo_genetico(poblacion, rivales, dicc_efectividad):
     #-------------------------------------------------------------------------------------------------------
     poblacion_seleccionada = list(victorias_combinadas_ordenadas.keys())[:50] #ELIJO LOS MEJORES 50 EQUIPOS
 
-    rivales_prox_gen = rivales[20:] + futuros_rivales #MEJORO LOS RIVALES CON BUENOS EQUIPOS 
+    rivales_prox_gen = rivales[15:] + futuros_rivales[:15] #MEJORO LOS RIVALES CON BUENOS EQUIPOS 
     
     return poblacion_seleccionada, rivales_prox_gen, victorias_combinadas_ordenadas
-    
-for _ in tqdm(range(20), desc="Procesando generaciones"):
-    nueva_poblacion, nuevos_rivales, dict_vict_combinadas = algoritmo_genetico(poblacion, rivales, dicc_efectividad)
-    poblacion = nueva_poblacion
-    rivales = nuevos_rivales
-    print(f'Generación {_+1}')
 
-imprimir_dict_equipos(dict_vict_combinadas)
+def crear_archivo_best_teams(name_archivo:str):
+    with open(name_archivo, mode = 'w',newline='') as archivo:
+        escritor_csv = csv.writer(archivo)
+        escritor_csv.writerow(['Generacion','Aptitud','Team Name','Starter','Pokemon1','Pokemon2','Pokemon3','Pokemon4','Pokemon5'])
+
+def crear_archivo_cant_pokemons(name_archivo:str):
+    with open(name_archivo, mode = 'w',newline='') as archivo:
+        escritor_csv = csv.writer(archivo)
+        escritor_csv.writerow(['Generacion','Cantidad','Pokemon'])
+
+def contar_cantidad_apariciones(poblacion:list[Team], cantidad_pokemons:dict):
+    for equipo in poblacion:
+        for pokemon in equipo.pokemons:
+            if pokemon.name in cantidad_pokemons:
+                cantidad_pokemons[pokemon.name] += 1
+            else:
+                cantidad_pokemons[pokemon.name] = 1
+    return cantidad_pokemons
+
+def cargar_csv_apariciones(cantidad_pokemones: dict[str, int], archivo: str, generacion: int):
+    with open(archivo, mode='a', newline='') as arch:
+        writer = csv.writer(arch)
+        
+        fila = [generacion+1]
+        for pokemon, cantidad in cantidad_pokemones.items():
+            fila.extend([cantidad, pokemon])
+        
+        writer.writerow(fila)
+
+def contar_frecuencia_tipos(poblacion, frecuencia_tipos: dict,generation:int):
+    for equipo in poblacion:
+        for pokemon in equipo.pokemons:
+            # Verificar y contar type1 si no es None
+            if pokemon.type1 is not None:
+                if pokemon.type1 in frecuencia_tipos:
+                    frecuencia_tipos[pokemon.type1] += 1
+                else:
+                    frecuencia_tipos[pokemon.type1] = 1
+            # Verificar y contar type2 si no es None
+            if pokemon.type2 is not None:
+                if pokemon.type2 in frecuencia_tipos:
+                    frecuencia_tipos[pokemon.type2] += 1
+                else:
+                    frecuencia_tipos[pokemon.type2] = 1
+    return frecuencia_tipos
+
+def escritura_best_teams(best_teams:list[Team],best_points:list[int],name_archivo:str,gen:int):
+    with open(name_archivo, mode ='a',newline='') as arch:
+        escritor_csv = csv.writer(arch)
+        for equipo, wins in zip(best_teams,best_points):
+            pokes_str = [poke.name for poke in equipo.pokemons]
+            escritor_csv.writerow([gen+1,wins,equipo.name]+ pokes_str)
+
+def algo_completo(generaciones:int,poblacion:list[Team],rivales:list[Team], dict_efectividad:dict[dict]):
+    for gen in tqdm(range(generaciones), desc="Procesando generaciones"):
+
+        nueva_poblacion, nuevos_rivales, dict_vict_combinadas = algoritmo_genetico(poblacion, rivales, dicc_efectividad)
+        poblacion = nueva_poblacion
+        rivales = nuevos_rivales
+        mejores_10_nombres = list(dict_vict_combinadas.keys())[:10]
+        mejores_10_puntos = [dict_vict_combinadas[nombre] for nombre in mejores_10_nombres]
+        escritura_best_teams(mejores_10_nombres,mejores_10_puntos,"Best_teams_x_generation.csv",gen)
+        dict_poke_cantidad = {}
+        dict_poke_cantidad = contar_cantidad_apariciones(poblacion,dict_poke_cantidad)
+        cargar_csv_apariciones(dict_poke_cantidad,"Cantidad_pokemones_x_gen.csv",gen)
+        print(f'Generación {gen+1}')
+
+    return nueva_poblacion, nuevos_rivales, dict_vict_combinadas
+
+crear_archivo_best_teams("Best_teams_x_generation.csv")  
+crear_archivo_cant_pokemons("Cantidad_pokemones_x_gen.csv")
+ultima_poblacion, ultimos_rivales, dict_vict_finales = algo_completo(20,poblacion,rivales,dicc_efectividad)
+    
+imprimir_dict_equipos(dict_vict_finales)
+
+
 
 

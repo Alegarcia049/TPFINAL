@@ -70,7 +70,7 @@ def crear_pokemon(pokemones: list[str], lista_moves: list):
         generation = int(linea[10])
         height = float(linea[11]) if len(linea[11]) > 0 else 0
         weight = float(linea[12]) if len(linea[12]) > 0 else 0 
-        is_legendary = bool(linea[13])
+        is_legendary = bool(int(linea[13]))
         moves = linea[14].split(";")
         obj_moves = crear_movimientos(moves,lista_moves)
         level = 50
@@ -78,7 +78,21 @@ def crear_pokemon(pokemones: list[str], lista_moves: list):
         return Pokemon(pokedex_number, name, type1, type2, hp, attack, deffense, sp_attack, sp_defense, speed, generation, height, weight, is_legendary, obj_moves, level)
 
         
-            
+def crear_equipo(pokemones: list[str]):
+    equipo = []
+    pokemones_elegidos = set()
+
+    while len(equipo) < 6:
+        poke_number = random.randint(0, len(pokemones)-1)
+        if poke_number not in pokemones_elegidos:
+            pokemon_elegido = pokemones[poke_number]
+            pokemon_objeto = crear_pokemon(pokemon_elegido)
+            if not pokemon_objeto.is_legendary:
+                equipo.append(pokemon_objeto)
+                pokemones_elegidos.add(poke_number)
+
+    return Team('name',equipo)
+               
 def crear_equipo(pokemones: list[str], lista_moves):
     equipo = []
     while True:
@@ -87,7 +101,7 @@ def crear_equipo(pokemones: list[str], lista_moves):
         pokemon = crear_pokemon(pokemones, lista_moves)
 
         if not (pokemon.name in set(pokemon.name for pokemon in equipo)):
-            if pokemon.is_legendary == True:
+            if not pokemon.is_legendary:
                 equipo.append(pokemon)
         else:
             continue
@@ -117,7 +131,19 @@ def simu_batallas(poblacion, rivales, efectividad):
     return victorias_ordenadas
 
 def seleccion_mejores(corte_seleccion : int,victorias : dict[int], pokemones: list[str], lista_moves):
-    futuros_rivales = list(victorias.keys())[:20]
+    # Seleccionar los "X" mejores equipos
+    mejores_equipos = list(victorias.keys())[:corte_seleccion]
+
+    # Generar 30 equipos randoms
+    nuevos_equipos = crear_poblaciones(50 - corte_seleccion, pokemones,lista_moves)
+
+    # Actualizar la poblacion
+    poblacion = mejores_equipos + nuevos_equipos
+    
+
+    return poblacion, mejores_equipos
+
+'''
     #Extraigo los mejores "X" equipos del diccionario de victorias
     mejores_equipos = {key:value for i,(key,value) in enumerate(victorias.items()) if i < corte_seleccion}
     #Creo una nueva poblacion y agregos estos mejores equipos
@@ -128,8 +154,9 @@ def seleccion_mejores(corte_seleccion : int,victorias : dict[int], pokemones: li
     relleno = crear_poblaciones(50-corte_seleccion , pokemones, lista_moves)
     for equipo in relleno:
         nueva_poblacion.append(equipo)
+
     return nueva_poblacion, futuros_rivales
-    return nueva_poblacion, futuros_rivales
+'''
 
 def asegurar_unicos(nuevo_team, pokemones, lista_moves):
     nombres_vistos = set()
@@ -159,17 +186,12 @@ def cruza_equipos(poblacion, pokemones, lista_moves):
         indice2 = random.randint(0, len(poblacion)-1)
         team2 = poblacion.pop(indice2)
 
-        #Mezclar con 70% de chance
-        if random.random() < 0.7:
-            #Creo un corte random de la cantidad de pokemones
-            cut = random.randint(0,5)
+        #Creo un corte random de la cantidad de pokemones
+        cut = random.randint(0,5)
 
-            nuevo_team1 = team1.pokemons[0:cut+1] + team2.pokemons[cut+1:]
-            nuevo_team2 = team1.pokemons[cut+1:] + team2.pokemons[:cut+1]
-        #Caso, contrario, se mantienen iguales
-        else:
-            nuevo_team1 = team1.pokemons[:]
-            nuevo_team2 = team2.pokemons[:]
+        nuevo_team1 = team1.pokemons[0:cut+1] + team2.pokemons[cut+1:]
+        nuevo_team2 = team1.pokemons[cut+1:] + team2.pokemons[:cut+1]
+
             
         #Asegurar que ambos equipos tengan 6 pokémones únicos
         nuevo_team1 = asegurar_unicos(nuevo_team1,pokemones,lista_moves)
@@ -211,7 +233,7 @@ def mutar(equipo, pokemones,lista_moves):
             nuevo_pokemon = crear_pokemon(pokemones[random.randint(0, len(pokemones) - 1)],lista_moves)
             
             while nuevo_pokemon.name in lista_equipo:
-                nuevo_pokemon = crear_pokemon(pokemones[random.randint(0, len(pokemones) - 1)])
+                nuevo_pokemon = crear_pokemon(pokemones[random.randint(0, len(pokemones) - 1)],lista_moves)
             equipo.pokemons[indice] = nuevo_pokemon
             lista_equipo[indice] = nuevo_pokemon.name  
 

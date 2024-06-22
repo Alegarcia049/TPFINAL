@@ -19,7 +19,7 @@ efectividad = create_effectiveness_dict()
 poblacion_inicial = 50
 cant_rivales  = 50
 corte_seleccion = 25
-generaciones = 30
+generaciones = 20
 
 #Creo poblacion inicial y rivales
 poblacion = crear_poblaciones(poblacion_inicial , pokemones, lista_moves)
@@ -38,27 +38,39 @@ def algoritmo_genetico(lista_moves, pokemones, efectividad, poblacion, rivales):
     poblacion_cruzada = cruza_equipos(nueva_poblacion, pokemones, lista_moves)
 
     #Muto la poblacion
-    poblacion_mutada = mutar_poblacion(poblacion_cruzada, pokemones)
+    poblacion_mutada = mutar_poblacion(poblacion_cruzada, pokemones, lista_moves)
 
     #Simulo las batallas y extraigo estadisticas
-    victorias_mutacion = simu_batallas(poblacion,rivales, efectividad)
+    victorias_mutacion = simu_batallas(poblacion_mutada,rivales, efectividad)
 
 
     #Combino las victorias de la poblacion original y la mutada
     victorias_combinadas = {**victorias, **victorias_mutacion}
     victorias_combinadas_ordenadas = dict(sorted(victorias_combinadas.items(), key=lambda item: item[1], reverse=True))
+    
 
     #Selecciono la mejor poblacion y proximos rivales
     poblacion_seleccionada = list(victorias_combinadas_ordenadas.keys())[:50]
-    rivales_prox_gen = rivales[15:] + futuros_rivales 
+    
+    rivales_prox_gen = rivales[15:] + futuros_rivales[:15]
+
 
     return poblacion_seleccionada, rivales_prox_gen, victorias_combinadas_ordenadas
 
-for _ in tqdm(range(generaciones), desc="Procesando generaciones"):
+
+print("Comienza el algoritmo genetico")
+
+# for _ in tqdm(range(generaciones), desc="Procesando generaciones"):
+#     nueva_poblacion, nuevos_rivales, dict_vict_combinadas = algoritmo_genetico(lista_moves, pokemones, efectividad, poblacion, rivales)
+#     poblacion = nueva_poblacion
+#     rivales = nuevos_rivales
+#     print(f'Generación {_+1}')
+
+for i in range(generaciones):
     nueva_poblacion, nuevos_rivales, dict_vict_combinadas = algoritmo_genetico(lista_moves, pokemones, efectividad, poblacion, rivales)
     poblacion = nueva_poblacion
     rivales = nuevos_rivales
-    print(f'Generación {_+1}')
+    print("Generacion: ",i)
 
 imprimir_dict_equipos(dict_vict_combinadas)
 
