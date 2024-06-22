@@ -117,6 +117,7 @@ def simu_batallas(poblacion, rivales, efectividad):
     return victorias_ordenadas
 
 def seleccion_mejores(corte_seleccion : int,victorias : dict[int], pokemones: list[str], lista_moves):
+    futuros_rivales = list(victorias.keys())[:20]
     #Extraigo los mejores "X" equipos del diccionario de victorias
     mejores_equipos = {key:value for i,(key,value) in enumerate(victorias.items()) if i < corte_seleccion}
     #Creo una nueva poblacion y agregos estos mejores equipos
@@ -127,6 +128,7 @@ def seleccion_mejores(corte_seleccion : int,victorias : dict[int], pokemones: li
     relleno = crear_poblaciones(50-corte_seleccion , pokemones, lista_moves)
     for equipo in relleno:
         nueva_poblacion.append(equipo)
+    return nueva_poblacion, futuros_rivales
     return nueva_poblacion, futuros_rivales
 
 def asegurar_unicos(nuevo_team, pokemones, lista_moves):
@@ -149,16 +151,12 @@ def asegurar_unicos(nuevo_team, pokemones, lista_moves):
 
 def cruza_equipos(poblacion, pokemones, lista_moves):
     poblacion_cruzada = []
-    while True:
-        if len(poblacion) == 0: 
-            break
-
-        #Extraigo dos equipos randoms de la poblacion
+    while len(poblacion) > 1:
+        # Extraigo dos equipos randoms de la poblacion
         indice1 = random.randint(0, len(poblacion)-1)
         team1 = poblacion.pop(indice1)
 
-        
-        indice2 = random.randint(0,len(poblacion)-1)
+        indice2 = random.randint(0, len(poblacion)-1)
         team2 = poblacion.pop(indice2)
 
         #Mezclar con 70% de chance
@@ -188,7 +186,7 @@ def imprimir_dict_equipos(dict_victorias):
             print(f"- {pokemon.name}")
 
 
-def mutar(equipo, pokemones):
+def mutar(equipo, pokemones,lista_moves):
     prob = random.random()
     lista_equipo = [pokemon.name for pokemon in equipo.pokemons]  # Lista de nombres de Pokémon en el equipo
     if prob <= 0.03:
@@ -210,7 +208,7 @@ def mutar(equipo, pokemones):
         else:
             # Seleccionar un Pokémon aleatorio del equipo y cambiarlo por un Pokémon aleatorio
             indice = random.randint(0, 5)
-            nuevo_pokemon = crear_pokemon(pokemones[random.randint(0, len(pokemones) - 1)])
+            nuevo_pokemon = crear_pokemon(pokemones[random.randint(0, len(pokemones) - 1)],lista_moves)
             
             while nuevo_pokemon.name in lista_equipo:
                 nuevo_pokemon = crear_pokemon(pokemones[random.randint(0, len(pokemones) - 1)])
@@ -219,10 +217,10 @@ def mutar(equipo, pokemones):
 
     return equipo
 
-def mutar_poblacion(poblacion, pokemones):
+def mutar_poblacion(poblacion, pokemones,lista_moves):
     
     for i in range(len(poblacion)):
         
-        poblacion[i] = mutar(poblacion[i], pokemones)
+        poblacion[i] = mutar(poblacion[i], pokemones,lista_moves)
     
     return poblacion

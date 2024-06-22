@@ -5,6 +5,7 @@ from team import Team
 from combat import*
 from Archivo_funciones import*
 from tqdm import tqdm
+from tqdm import tqdm
 
 
 #Extraigo la lista de pokemos y movimientos del arhivo CSV. Y la tabla de efectividad    
@@ -16,7 +17,7 @@ efectividad = create_effectiveness_dict()
       
 #Parametros iniciales
 poblacion_inicial = 50
-cant_rivales  = 100
+cant_rivales  = 50
 corte_seleccion = 25
 generaciones = 30
 
