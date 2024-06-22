@@ -87,13 +87,27 @@ def peleas_y_puntos(poblacion, rivales, effectiveness_dict):
 
 def actualizar_poblacion(poblacion: list[Team], victorias_ordenadas: dict[Team, int]):
     # Seleccionar los 20 mejores equipos
-    mejores_equipos = list(victorias_ordenadas.keys())[:20]
+    mejores_equipos = list(victorias_ordenadas.keys())[:25]
     # Generar 30 equipos randoms
-    nuevos_equipos = crear_teams(30, pokemones)
+    nuevos_equipos = crear_teams(25, pokemones)
     # Actualizar la poblacion
     poblacion = mejores_equipos + nuevos_equipos
 
     return poblacion, mejores_equipos
+
+def asegurar_unicos(nuevo_team):
+            nombres_vistos = set()
+            equipo_unico = []
+            for pokemon in nuevo_team:
+                if pokemon.name not in nombres_vistos:
+                    equipo_unico.append(pokemon)
+                    nombres_vistos.add(pokemon.name)
+            while len(equipo_unico) < 6:
+                nuevo_pokemon = crear_pokemon(pokemones[random.randint(0, len(pokemones) - 1)])
+                if nuevo_pokemon.name not in nombres_vistos and not nuevo_pokemon.is_legendary:
+                    equipo_unico.append(nuevo_pokemon)
+                    nombres_vistos.add(nuevo_pokemon.name)
+            return equipo_unico
 
 #MODIFICAR MANGA DE PUTOS
 def cruza_equipos(poblacion):
@@ -111,21 +125,6 @@ def cruza_equipos(poblacion):
 
         nuevo_team1_pokemons = team1.pokemons[:cut] + team2.pokemons[cut:]
         nuevo_team2_pokemons = team2.pokemons[:cut] + team1.pokemons[cut:]
-
-        # Función para asegurar que el equipo tenga 6 pokémones únicos
-        def asegurar_unicos(nuevo_team):
-            nombres_vistos = set()
-            equipo_unico = []
-            for pokemon in nuevo_team:
-                if pokemon.name not in nombres_vistos:
-                    equipo_unico.append(pokemon)
-                    nombres_vistos.add(pokemon.name)
-            while len(equipo_unico) < 6:
-                nuevo_pokemon = crear_pokemon(pokemones[random.randint(0, len(pokemones) - 1)])
-                if nuevo_pokemon.name not in nombres_vistos and not nuevo_pokemon.is_legendary:
-                    equipo_unico.append(nuevo_pokemon)
-                    nombres_vistos.add(nuevo_pokemon.name)
-            return equipo_unico
 
         # Asegurar que ambos equipos tengan 6 pokémones únicos
         nuevo_team1_pokemons = asegurar_unicos(nuevo_team1_pokemons)
@@ -183,7 +182,7 @@ efectividad = lectura_pokemones('./data/effectiveness_chart.csv')
 
 poblacion = crear_teams(50, pokemones)
 
-rivales = crear_teams(400, pokemones)
+rivales = crear_teams(100, pokemones)
 
 dicc_efectividad = crear_dict_efectividad(efectividad)
 #-------------------------------------------------------------------------------------------------------
@@ -209,8 +208,6 @@ def algoritmo_genetico(poblacion, rivales, dicc_efectividad):
     poblacion_cruzada = mutar_poblacion(poblacion_criada)
     
     #-------------------------------------------------------------------------------------------------------
-    #MEJORA DEL ALGORITMO GENETICO
-    #-------------------------------------------------------------------------------------------------------
     #APTITUDES de cada TEAM (HIJOS) (PELEAS Y PUNTOS)
     #-------------------------------------------------------------------------------------------------------
     victorias_hijos_ordenada = peleas_y_puntos(poblacion_cruzada, rivales, dicc_efectividad)
@@ -227,7 +224,7 @@ def algoritmo_genetico(poblacion, rivales, dicc_efectividad):
     #-------------------------------------------------------------------------------------------------------
     poblacion_seleccionada = list(victorias_combinadas_ordenadas.keys())[:50] #ELIJO LOS MEJORES 50 EQUIPOS
 
-    rivales_prox_gen = rivales[20:] + futuros_rivales #MEJORO LOS RIVALES CON BUENOS EQUIPOS 
+    rivales_prox_gen = rivales[15:] + futuros_rivales[:15] #MEJORO LOS RIVALES CON BUENOS EQUIPOS 
     
     return poblacion_seleccionada, rivales_prox_gen, victorias_combinadas_ordenadas
     
@@ -237,6 +234,14 @@ for _ in tqdm(range(20), desc="Procesando generaciones"):
     rivales = nuevos_rivales
     print(f'Generación {_+1}')
 
+    # Verificar longitudes de población y rivales
+    if len(nueva_poblacion) != 50:
+        raise ValueError(f"Error en la generación {_+1}: La población no tiene 50 elementos, tiene {len(nueva_poblacion)}")
+    if len(nuevos_rivales) != 100:
+        raise ValueError(f"Error en la generación {_+1}: Los rivales no tienen 400 elementos, tienen {len(nuevos_rivales)}")
+
 imprimir_dict_equipos(dict_vict_combinadas)
+
+
 
 
