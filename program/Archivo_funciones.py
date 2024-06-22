@@ -56,26 +56,29 @@ def crear_pokemon(pokemones: list[str], lista_moves: list):
         random_index = random.randint(0, len(pokemones)-1)
         linea = pokemones[random_index].rstrip()
         linea = linea.split(",")
-        if int(linea[-2]) == 0: 
-            pokedex_number = int(linea[0])
-            name = linea[1]
-            type1 = linea[2]
-            type2 = linea[3]
-            hp = int(linea[4])
-            attack = int(linea[5])
-            deffense = int(linea[6])
-            sp_attack = int(linea[7])
-            sp_defense = int(linea[8])
-            speed = int(linea[9])
-            generation = int(linea[10])
-            height = float(linea[11]) if len(linea[11]) > 0 else 0
-            weight = float(linea[12]) if len(linea[12]) > 0 else 0 
-            is_legendary = bool(linea[13])
-            moves = linea[14].split(";")
-            obj_moves = crear_movimientos(moves,lista_moves)
-            level = 50
-            
-            return Pokemon(pokedex_number, name, type1, type2, hp, attack, deffense, sp_attack, sp_defense, speed, generation, height, weight, is_legendary, obj_moves, level)
+        
+        pokedex_number = int(linea[0])
+        name = linea[1]
+        type1 = linea[2]
+        type2 = linea[3]
+        hp = int(linea[4])
+        attack = int(linea[5])
+        deffense = int(linea[6])
+        sp_attack = int(linea[7])
+        sp_defense = int(linea[8])
+        speed = int(linea[9])
+        generation = int(linea[10])
+        height = float(linea[11]) if len(linea[11]) > 0 else 0
+        weight = float(linea[12]) if len(linea[12]) > 0 else 0 
+        is_legendary = bool(linea[13])
+        moves = linea[14].split(";")
+        obj_moves = crear_movimientos(moves,lista_moves)
+        level = 50
+        
+        pokemon = Pokemon(pokedex_number, name, type1, type2, hp, attack, deffense, sp_attack, sp_defense, speed, generation, height, weight, is_legendary, obj_moves, level)
+
+        if not pokemon.is_legendary:
+            return pokemon
             
 def crear_equipo(pokemones: list[str], lista_moves):
     equipo = []
@@ -116,13 +119,33 @@ def seleccion_mejores(corte_seleccion : int,victorias : dict[int], pokemones: li
     mejores_equipos = {key:value for i,(key,value) in enumerate(victorias.items()) if i < corte_seleccion}
     #Creo una nueva poblacion y agregos estos mejores equipos
     nueva_poblacion = [key for key in mejores_equipos.keys()]
+    #Extraigo los 20 mejores para futuros rivales
+    futuros_rivales = nueva_poblacion[:15]
     #Completamos la poblacion a 50
     relleno = crear_poblaciones(50-corte_seleccion , pokemones, lista_moves)
     for equipo in relleno:
         nueva_poblacion.append(equipo)
-    return nueva_poblacion
+    return nueva_poblacion, futuros_rivales
 
-def cruza_equipos(poblacion):
+def asegurar_unicos(nuevo_team, pokemones, lista_moves):
+    nombres_vistos = set()
+    equipo_unico = []
+    for pokemon in nuevo_team:
+        if pokemon.name not in nombres_vistos:
+            equipo_unico.append(pokemon)
+            nombres_vistos.add(pokemon.name)
+    contador = 0
+    while len(equipo_unico) < 6:
+        contador += 1
+        if contador > 15:
+            print("bucle infito en repetidos")
+        nuevo_pokemon = crear_pokemon(pokemones, lista_moves)
+        if nuevo_pokemon.name not in nombres_vistos:
+            equipo_unico.append(nuevo_pokemon)
+            nombres_vistos.add(nuevo_pokemon.name)
+    return equipo_unico
+
+def cruza_equipos(poblacion, pokemones, lista_moves):
     poblacion_cruzada = []
     while True:
         if len(poblacion) == 0: 
@@ -136,37 +159,21 @@ def cruza_equipos(poblacion):
         indice2 = random.randint(0,len(poblacion)-1)
         team2 = poblacion.pop(indice2)
 
-        #Creo un corte random de la cantidad de pokemones
-        cut = random.randint(0,5)
+        #Mezclar con 70% de chance
+        if random.random() < 0.7:
+            #Creo un corte random de la cantidad de pokemones
+            cut = random.randint(0,5)
 
-        nuevo_team1 = team1.pokemons[0:cut+1] + team2.pokemons[cut+1:]
-        nuevo_team2 = team1.pokemons[cut+1:] + team2.pokemons[:cut+1]
-        
-        if len(set(pokemon.name for pokemon in nuevo_team1)) < 6:
-            vistos = []
-            repetidos = []
-            for pokemon in nuevo_team1:
-                if pokemon.name not in vistos:
-                    vistos.append(pokemon.name)
-                else:
-                    repetidos.append(pokemon)
-            while len(set(pokemon.name for pokemon in nuevo_team1)) < 6:
-                for pokes in repetidos:
-                    ind_repetido = nuevo_team1.index(pokes)
-                    nuevo_team1[ind_repetido], nuevo_team2[random.randint(0,5)] = nuevo_team2[random.randint(0,5)], nuevo_team1[ind_repetido]
-        
-        if len(set(pokemon.name for pokemon in nuevo_team2)) < 6:
-            vistos = []
-            repetidos = []
-            for pokemon in nuevo_team2:
-                if pokemon.name not in vistos:
-                    vistos.append(pokemon.name)
-                else:
-                    repetidos.append(pokemon)
-            while len(set(pokemon.name for pokemon in nuevo_team2)) < 6:
-                for pokes in repetidos:
-                    ind_repetido = nuevo_team1.index(pokes)
-                    nuevo_team2[ind_repetido], nuevo_team1[random.randint(0,5)] = nuevo_team1[random.randint(0,5)], nuevo_team2[ind_repetido]
+            nuevo_team1 = team1.pokemons[0:cut+1] + team2.pokemons[cut+1:]
+            nuevo_team2 = team1.pokemons[cut+1:] + team2.pokemons[:cut+1]
+        #Caso, contrario, se mantienen iguales
+        else:
+            nuevo_team1 = team1
+            nuevo_team2 = team2
+            
+        #Asegurar que ambos equipos tengan 6 pokémones únicos
+        nuevo_team1 = asegurar_unicos(nuevo_team1,pokemones,lista_moves)
+        nuevo_team2 = asegurar_unicos(nuevo_team2,pokemones,lista_moves)
 
 
     return poblacion_cruzada
