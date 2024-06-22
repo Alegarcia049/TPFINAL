@@ -94,6 +94,7 @@ def actualizar_poblacion(poblacion: list[Team], victorias_ordenadas: dict[Team, 
     poblacion = mejores_equipos + nuevos_equipos
 
     return poblacion, mejores_equipos
+
 #MODIFICAR MANGA DE PUTOS
 def cruza_equipos(poblacion):
     poblacion_cruzada = []
@@ -121,7 +122,7 @@ def cruza_equipos(poblacion):
                     nombres_vistos.add(pokemon.name)
             while len(equipo_unico) < 6:
                 nuevo_pokemon = crear_pokemon(pokemones[random.randint(0, len(pokemones) - 1)])
-                if nuevo_pokemon.name not in nombres_vistos:
+                if nuevo_pokemon.name not in nombres_vistos and not nuevo_pokemon.is_legendary:
                     equipo_unico.append(nuevo_pokemon)
                     nombres_vistos.add(nuevo_pokemon.name)
             return equipo_unico
@@ -230,7 +231,7 @@ def algoritmo_genetico(poblacion, rivales, dicc_efectividad):
     
     return poblacion_seleccionada, rivales_prox_gen, victorias_combinadas_ordenadas
     
-for _ in tqdm(range(50), desc="Procesando generaciones"):
+for _ in tqdm(range(20), desc="Procesando generaciones"):
     nueva_poblacion, nuevos_rivales, dict_vict_combinadas = algoritmo_genetico(poblacion, rivales, dicc_efectividad)
     poblacion = nueva_poblacion
     rivales = nuevos_rivales
