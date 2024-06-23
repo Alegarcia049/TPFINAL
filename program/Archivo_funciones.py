@@ -3,6 +3,7 @@ from pokemon import Pokemon
 from move import Move
 from team import Team
 from combat import*
+from tqdm import tqdm
 
 
 def lista_pokemones():
@@ -35,6 +36,20 @@ def create_effectiveness_dict()->dict[str, dict[str, float]]:
             effectiveness[attacker] = {defender:dmg for defender, dmg in zip(defenders,line)}
             line = file.readline()
     return effectiveness
+
+def effectiveness_dic():
+    with open('./data/effectiveness_chart.csv', 'r') as file:
+        efectividad = file.readlines()[1:]
+    effectiveness_dict = {}
+    for line in efectividad:
+        key = line.split(",")[0]
+        dict_interno = {}
+        for i in range(len(efectividad)):
+            key_interna = efectividad[i].split(",")[0]
+            valor_interno = float(line.split(",")[i + 1])
+            dict_interno[key_interna] = valor_interno
+        effectiveness_dict[key] = dict_interno
+    return effectiveness_dict
 
 def crear_movimientos(moves: list[str], lista_moves: list):
     lista_obj_moves = []
@@ -189,13 +204,19 @@ def cruza_equipos(poblacion, pokemones, lista_moves):
         #Creo un corte random de la cantidad de pokemones
         cut = random.randint(0,5)
 
-        nuevo_team1 = team1.pokemons[0:cut+1] + team2.pokemons[cut+1:]
-        nuevo_team2 = team1.pokemons[cut+1:] + team2.pokemons[:cut+1]
+        nuevo_team1 = team1.pokemons[:cut] + team2.pokemons[cut:]
+        nuevo_team2 = team2.pokemons[:cut] + team1.pokemons[cut:]
+
+        # nuevo_team1 = team1.pokemons[0:cut+1] + team2.pokemons[cut+1:]
+        # nuevo_team2 = team1.pokemons[cut+1:] + team2.pokemons[:cut+1]
 
             
         #Asegurar que ambos equipos tengan 6 pokémones únicos
         nuevo_team1 = asegurar_unicos(nuevo_team1,pokemones,lista_moves)
         nuevo_team2 = asegurar_unicos(nuevo_team2,pokemones,lista_moves)
+
+        poblacion_cruzada.append(Team(team1.name,nuevo_team1))
+        poblacion_cruzada.append(Team(team2.name,nuevo_team2))
 
 
     return poblacion_cruzada
@@ -216,10 +237,10 @@ def mutar(equipo, pokemones,lista_moves):
 
         if tipo_mutacion == 1:
             # Cambiar el Pokémon inicial por un Pokémon aleatorio
-            nuevo_pokemon = crear_pokemon(pokemones[random.randint(0, len(pokemones) - 1)])
+            nuevo_pokemon = crear_pokemon(pokemones,lista_moves)
     
             while nuevo_pokemon.name in lista_equipo:
-                nuevo_pokemon = crear_pokemon(pokemones[random.randint(0, len(pokemones) - 1)])
+                nuevo_pokemon = crear_pokemon(pokemones,lista_moves)
             equipo.pokemons[0] = nuevo_pokemon
             lista_equipo[0] = nuevo_pokemon.name  # Actualizar la lista de nombres
         elif tipo_mutacion == 2:
@@ -230,10 +251,10 @@ def mutar(equipo, pokemones,lista_moves):
         else:
             # Seleccionar un Pokémon aleatorio del equipo y cambiarlo por un Pokémon aleatorio
             indice = random.randint(0, 5)
-            nuevo_pokemon = crear_pokemon(pokemones[random.randint(0, len(pokemones) - 1)],lista_moves)
+            nuevo_pokemon = crear_pokemon(pokemones,lista_moves)
             
             while nuevo_pokemon.name in lista_equipo:
-                nuevo_pokemon = crear_pokemon(pokemones[random.randint(0, len(pokemones) - 1)],lista_moves)
+                nuevo_pokemon = crear_pokemon(pokemones,lista_moves)
             equipo.pokemons[indice] = nuevo_pokemon
             lista_equipo[indice] = nuevo_pokemon.name  
 
@@ -246,3 +267,35 @@ def mutar_poblacion(poblacion, pokemones,lista_moves):
         poblacion[i] = mutar(poblacion[i], pokemones,lista_moves)
     
     return poblacion
+
+
+def algoritmo_genetico(corte_seleccion, lista_moves, pokemones, efectividad, poblacion, rivales):
+    #Simulo las batallas y extraigo las estadisticas
+    victorias = simu_batallas(poblacion,rivales,efectividad)
+    # print("Primeras victorias",victorias)
+
+    #Selecciono los "X" mejores equipos y completo la poblacion con nuevos equipos randoms
+    nueva_poblacion, futuros_rivales = seleccion_mejores(corte_seleccion, victorias, pokemones, lista_moves)
+
+    #Cruzo los pokemones de los equipos
+    poblacion_cruzada = cruza_equipos(nueva_poblacion, pokemones, lista_moves)
+
+    #Muto la poblacion
+    poblacion_mutada = mutar_poblacion(poblacion_cruzada, pokemones, lista_moves)
+
+    #Simulo las batallas y extraigo estadisticas
+    victorias_mutacion = simu_batallas(poblacion_mutada,rivales, efectividad)
+
+
+    #Combino las victorias de la poblacion original y la mutada
+    victorias_combinadas = {**victorias, **victorias_mutacion}
+    victorias_combinadas_ordenadas = dict(sorted(victorias_combinadas.items(), key=lambda item: item[1], reverse=True))
+    
+
+    #Selecciono la mejor poblacion y proximos rivales
+    poblacion_seleccionada = list(victorias_combinadas_ordenadas.keys())[:50]
+    
+    rivales_prox_gen = rivales[15:] + futuros_rivales[:15]
+
+
+    return poblacion_seleccionada, rivales_prox_gen, victorias_combinadas_ordenadas
