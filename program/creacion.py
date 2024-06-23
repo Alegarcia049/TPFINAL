@@ -183,7 +183,7 @@ efectividad = lectura_pokemones('./data/effectiveness_chart.csv')
 
 poblacion = crear_teams(50, pokemones)
 
-rivales = crear_teams(50, pokemones)
+rivales = crear_teams(400, pokemones)
 
 dicc_efectividad = crear_dict_efectividad(efectividad)
 #-------------------------------------------------------------------------------------------------------
@@ -258,7 +258,13 @@ def cargar_csv_apariciones(cantidad_pokemones: dict[str, int], archivo: str, gen
         
         writer.writerow(fila)
 
-def contar_frecuencia_tipos(poblacion, frecuencia_tipos: dict,generation:int):
+def crear_archivo_tipos(name_archivo:str):
+    with open(name_archivo, mode = 'w',newline='') as archivo:
+        escritor_csv = csv.writer(archivo)
+        escritor_csv.writerow(['Tipo','Cantidad'])
+
+def contar_frecuencia_tipos(poblacion):
+    frecuencia_tipos = {}
     for equipo in poblacion:
         for pokemon in equipo.pokemons:
             # Verificar y contar type1 si no es None
@@ -273,8 +279,15 @@ def contar_frecuencia_tipos(poblacion, frecuencia_tipos: dict,generation:int):
                     frecuencia_tipos[pokemon.type2] += 1
                 else:
                     frecuencia_tipos[pokemon.type2] = 1
+    
     return frecuencia_tipos
 
+def cargar_tipos_en_csv(diccionario_tipos: dict, name_archivo: str):
+    with open(name_archivo, mode='a', newline='') as archivo:  
+        escritor_csv = csv.writer(archivo)
+        for tipo, cantidad in diccionario_tipos.items():
+            escritor_csv.writerow([tipo, cantidad])
+    
 def escritura_best_teams(best_teams:list[Team],best_points:list[int],name_archivo:str,gen:int):
     with open(name_archivo, mode ='a',newline='') as arch:
         escritor_csv = csv.writer(arch)
@@ -290,19 +303,25 @@ def algo_completo(generaciones:int,poblacion:list[Team],rivales:list[Team], dict
         rivales = nuevos_rivales
         mejores_10_nombres = list(dict_vict_combinadas.keys())[:10]
         mejores_10_puntos = [dict_vict_combinadas[nombre] for nombre in mejores_10_nombres]
-        escritura_best_teams(mejores_10_nombres,mejores_10_puntos,"Best_teams_x_generation.csv",gen)
+        escritura_best_teams(mejores_10_nombres,mejores_10_puntos,"Best_teams_x_generation2.csv",gen)
         dict_poke_cantidad = {}
         dict_poke_cantidad = contar_cantidad_apariciones(poblacion,dict_poke_cantidad)
-        cargar_csv_apariciones(dict_poke_cantidad,"Cantidad_pokemones_x_gen.csv",gen)
+        cargar_csv_apariciones(dict_poke_cantidad,"Cantidad_pokemones_x_gen2.csv",gen)
         print(f'Generación {gen+1}')
 
     return nueva_poblacion, nuevos_rivales, dict_vict_combinadas
 
-crear_archivo_best_teams("Best_teams_x_generation.csv")  
-crear_archivo_cant_pokemons("Cantidad_pokemones_x_gen.csv")
-ultima_poblacion, ultimos_rivales, dict_vict_finales = algo_completo(20,poblacion,rivales,dicc_efectividad)
-    
-imprimir_dict_equipos(dict_vict_finales)
+crear_archivo_best_teams("Best_teams_x_generation2.csv")  
+crear_archivo_cant_pokemons("Cantidad_pokemones_x_gen2.csv")
+crear_archivo_tipos("Cantidad_tipo_ult_gen2.csv")
+ultima_poblacion, ultimos_rivales, dict_vict_finales = algo_completo(25,poblacion,rivales,dicc_efectividad)
+dict_tipos = contar_frecuencia_tipos(ultima_poblacion)
+dict_tipos_ordenado = dict(sorted(dict_tipos.items(), key=lambda item: item[1], reverse=True))
+cargar_tipos_en_csv(dict_tipos_ordenado,"Cantidad_tipo_ult_gen2.csv")
+
+
+
+
 
 
 
