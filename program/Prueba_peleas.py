@@ -76,7 +76,8 @@ nombre4 = 'Salamence'
 nombre5 = 'Krookodile'
 nombre6 = 'Slaking'
 nombres_team1 = [nombre1, nombre2, nombre3, nombre4, nombre5, nombre6]
-#Kangaskhan,Aerodactyl,Silvally,Palossand,Metagross,Snorlax
+team1 = team_por_nombres("team1",nombres_team1,pokemones,lista_moves)
+
 #team2
 nombre7 = 'Kangaskhan'
 nombre8 = 'Aerodactyl'
@@ -85,12 +86,45 @@ nombre10 = 'Palossand'
 nombre11 = 'Metagross'
 nombre12 = 'Snorlax'
 nombres_team2 = [nombre7, nombre8, nombre9, nombre10, nombre11, nombre12]
-
-
-team1 = team_por_nombres("team1",nombres_team1,pokemones,lista_moves)
-
 team2 = team_por_nombres("team2",nombres_team2,pokemones,lista_moves)
 
-ganador = get_winner(team1, team2, efectividad)
+#team3
+nombres_team3 = ['Kangaskhan','Lickilicky','Furfrou','Silvally','Palossand','Metagross']
+team3 = team_por_nombres('Team3', nombres_team3, pokemones, lista_moves)
 
-print(ganador.name)
+
+#Equipos legendarios y bauty
+bauty = ['Salazzle','Kangaskhan','Gengar','Scraggy','Greninja','Gallade']
+bauty_team = team_por_nombres('bauty', bauty, pokemones, lista_moves)
+
+will = ['Bronzong', 'Jynx', 'Grumpig', 'Slowbro', 'Gardevoir', 'Xatu']
+will_team = team_por_nombres("will", will, pokemones, lista_moves)
+
+Koga = ['Skunktank', 'Toxicroak', 'Swalot', 'Venomoth', 'Muk', 'Crobat']
+koga_team = team_por_nombres("koga", Koga, pokemones, lista_moves)
+
+Bruno = ['Hitmontop', 'Hitmonlee', 'Hariyama', 'Machamp', 'Lucario', 'Hitmonchan']
+bruno_team = team_por_nombres('Bruno',Bruno,pokemones,lista_moves)
+
+Karen = ['Weavile', 'Spiritomb', 'Honchkrow', 'Umbreon', 'Houndoom', 'Absol']
+karen_team = team_por_nombres('Karen', Karen, pokemones, lista_moves)
+
+Lance = ['Salamence', 'Garchomp', 'Dragonite', 'Charizard', 'Altaria', 'Gyarados']
+lance_team = team_por_nombres('Lance', Lance, pokemones, lista_moves)
+
+equipos_legendarios = [bauty_team, will_team, koga_team, bruno_team, karen_team, lance_team]
+
+#Simulador peleas
+print("Peleas Team1")
+for rival in equipos_legendarios:
+    ganador = get_winner(team1, rival, efectividad)
+    print(f"Team1 VS {rival.name} = {ganador.name}")
+
+print("\nPeleas Team2")
+for rival in equipos_legendarios:
+    ganador = get_winner(team2, rival, efectividad)
+    print(f"Team2 VS {rival.name} = {ganador.name}")
+
+print("\nTeam1 vs Team2")
+ganador = get_winner(team1, team2, efectividad)
+print(f'Team1 VS Team2 = {ganador.name}')
