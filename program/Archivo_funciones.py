@@ -296,7 +296,8 @@ def algoritmo_genetico(corte_seleccion, lista_moves, pokemones, efectividad, pob
     #Selecciono la mejor poblacion y proximos rivales
     poblacion_seleccionada = list(victorias_combinadas_ordenadas.keys())[:50]
     
-    rivales_prox_gen = rivales[15:] + futuros_rivales[:15]
+    nuevos_rivales = crear_poblaciones(15,pokemones, lista_moves)
+    rivales_prox_gen = rivales[30:] + futuros_rivales[:15] + nuevos_rivales
 
 
     return poblacion_seleccionada, rivales_prox_gen, victorias_combinadas_ordenadas
