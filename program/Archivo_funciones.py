@@ -202,19 +202,21 @@ def cruza_equipos(poblacion, pokemones, lista_moves):
         indice2 = random.randint(0, len(poblacion)-1)
         team2 = poblacion.pop(indice2)
 
-        #Creo un corte random de la cantidad de pokemones
-        cut = random.randint(0,5)
+        if random.random() <= 0.7:
 
-        nuevo_team1 = team1.pokemons[:cut] + team2.pokemons[cut:]
-        nuevo_team2 = team2.pokemons[:cut] + team1.pokemons[cut:]
+            #Creo un corte random de la cantidad de pokemones
+            cut = random.randint(0,5)
 
-        # nuevo_team1 = team1.pokemons[0:cut+1] + team2.pokemons[cut+1:]
-        # nuevo_team2 = team1.pokemons[cut+1:] + team2.pokemons[:cut+1]
-
+            nuevo_team1 = team1.pokemons[:cut] + team2.pokemons[cut:]
+            nuevo_team2 = team2.pokemons[:cut] + team1.pokemons[cut:]
             
-        #Asegurar que ambos equipos tengan 6 pokémones únicos
-        nuevo_team1 = asegurar_unicos(nuevo_team1,pokemones,lista_moves)
-        nuevo_team2 = asegurar_unicos(nuevo_team2,pokemones,lista_moves)
+            #Asegurar que ambos equipos tengan 6 pokémones únicos
+            nuevo_team1 = asegurar_unicos(nuevo_team1,pokemones,lista_moves)
+            nuevo_team2 = asegurar_unicos(nuevo_team2,pokemones,lista_moves)
+
+        else: 
+            nuevo_team1 = team1.pokemons[:]
+            nuevo_team2 = team2.pokemons[:]
 
         poblacion_cruzada.append(Team(team1.name,nuevo_team1))
         poblacion_cruzada.append(Team(team2.name,nuevo_team2))
@@ -390,10 +392,10 @@ def algoritmo_completo(corte_seleccion: int, generaciones: int, lista_moves, pok
         rivales = nuevos_rivales
         mejores_10_nombres = list(dict_vict_combinadas.keys())[:10]
         mejores_10_puntos = [dict_vict_combinadas[nombre] for nombre in mejores_10_nombres]
-        escritura_best_teams(mejores_10_nombres,mejores_10_puntos,"Best_teams_x_generation2.csv",gen)
+        escritura_best_teams(mejores_10_nombres,mejores_10_puntos,"Best_teams_x_generation3.csv",gen)
         dict_poke_cantidad = {}
         dict_poke_cantidad = contar_cantidad_apariciones(poblacion,dict_poke_cantidad)
-        cargar_csv_apariciones(dict_poke_cantidad,"Cantidad_pokemones_x_gen2.csv",gen)
+        cargar_csv_apariciones(dict_poke_cantidad,"Cantidad_pokemones_x_gen3.csv",gen)
         print(f'Generación {gen+1}')
 
     return nueva_poblacion, nuevos_rivales, dict_vict_combinadas

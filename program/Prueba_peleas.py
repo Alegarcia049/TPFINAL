@@ -89,7 +89,9 @@ nombres_team2 = [nombre7, nombre8, nombre9, nombre10, nombre11, nombre12]
 team2 = team_por_nombres("team2",nombres_team2,pokemones,lista_moves)
 
 #team3
-nombres_team3 = ['Kangaskhan','Lickilicky','Furfrou','Silvally','Palossand','Metagross']
+# 25,291,Equipo 37,Slaking,Snorlax,Starmie,Oranguru,Venusaur,Vaporeon
+# 25,263,Equipo 21,Slaking,Snorlax,Mareep,Accelgor,Salamence,Hydreigon
+nombres_team3 = ['Slaking','Snorlax','Mareep','Accelgor','Salamence','Hydreigon']
 team3 = team_por_nombres('Team3', nombres_team3, pokemones, lista_moves)
 
 
@@ -125,6 +127,14 @@ for rival in equipos_legendarios:
     ganador = get_winner(team2, rival, efectividad)
     print(f"Team2 VS {rival.name} = {ganador.name}")
 
+print("\nPeleas Team3")
+for rival in equipos_legendarios:
+    ganador = get_winner(team3, rival, efectividad)
+    print(f"Team3 VS {rival.name} = {ganador.name}")
+
 print("\nTeam1 vs Team2")
 ganador = get_winner(team1, team2, efectividad)
 print(f'Team1 VS Team2 = {ganador.name}')
+
+
+print(random.random())
