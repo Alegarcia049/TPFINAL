@@ -4,6 +4,7 @@ from move import Move
 from team import Team
 from combat import*
 from tqdm import tqdm
+import csv
 
 
 def lista_pokemones():
@@ -145,11 +146,11 @@ def simu_batallas(poblacion, rivales, efectividad):
     victorias_ordenadas = dict(sorted(victorias.items(), key=lambda item: item[1], reverse=True))
     return victorias_ordenadas
 
-def seleccion_mejores(corte_seleccion : int,victorias : dict[int], pokemones: list[str], lista_moves):
+def seleccion_mejores(corte_seleccion : int, poblacion : list[Team], victorias : dict[int], pokemones: list[str], lista_moves):
     # Seleccionar los "X" mejores equipos
     mejores_equipos = list(victorias.keys())[:corte_seleccion]
 
-    # Generar 30 equipos randoms
+    # Generar "X" equipos randoms (rellenar hasta armar una poblacion de 50)
     nuevos_equipos = crear_poblaciones(50 - corte_seleccion, pokemones,lista_moves)
 
     # Actualizar la poblacion
@@ -275,7 +276,7 @@ def algoritmo_genetico(corte_seleccion, lista_moves, pokemones, efectividad, pob
     # print("Primeras victorias",victorias)
 
     #Selecciono los "X" mejores equipos y completo la poblacion con nuevos equipos randoms
-    nueva_poblacion, futuros_rivales = seleccion_mejores(corte_seleccion, victorias, pokemones, lista_moves)
+    nueva_poblacion, futuros_rivales = seleccion_mejores(corte_seleccion, poblacion, victorias, pokemones, lista_moves)
 
     #Cruzo los pokemones de los equipos
     poblacion_cruzada = cruza_equipos(nueva_poblacion, pokemones, lista_moves)
@@ -299,3 +300,99 @@ def algoritmo_genetico(corte_seleccion, lista_moves, pokemones, efectividad, pob
 
 
     return poblacion_seleccionada, rivales_prox_gen, victorias_combinadas_ordenadas
+
+def crear_archivo_best_teams(name_archivo:str):
+    with open(name_archivo, mode = 'w',newline='') as archivo:
+        escritor_csv = csv.writer(archivo)
+        escritor_csv.writerow(['Generacion','Aptitud','Team Name','Starter','Pokemon1','Pokemon2','Pokemon3','Pokemon4','Pokemon5'])
+
+def crear_archivo_cant_pokemons(name_archivo:str):
+    with open(name_archivo, mode = 'w',newline='') as archivo:
+        escritor_csv = csv.writer(archivo)
+        escritor_csv.writerow(['Generacion','Cantidad','Pokemon'])
+
+def crear_archivo_tipos(name_archivo:str):
+    with open(name_archivo, mode = 'w',newline='') as archivo:
+        escritor_csv = csv.writer(archivo)
+        escritor_csv.writerow(['Tipo','Cantidad'])
+
+def contar_cantidad_apariciones(poblacion:list[Team], cantidad_pokemons:dict):
+    """ 
+    Parametros: Recibe una poblacion de pokemones y un diccionario vacio
+    Cuenta la cantidad de apareciciones de pokemones en la poblacion y los carga al diccionario
+    Con el formato Key : Value tal que "Pokemon" : "cant"
+    Se utiliza para contar la cant de apariciones de la poblacion de cada generacion
+    """
+    for equipo in poblacion:
+        for pokemon in equipo.pokemons:
+            if pokemon.name in cantidad_pokemons:
+                cantidad_pokemons[pokemon.name] += 1
+            else:
+                cantidad_pokemons[pokemon.name] = 1
+    return cantidad_pokemons
+
+def contar_frecuencia_tipos(poblacion: list[Team]):
+    """ 
+    Parametros: Recibe una poblacion de pokemones
+    Cuenta la cantidad de frecuencias de tipos de toda la poblacion
+    y los almacena de un diccionario, que luego devuelve.
+    Con el formato Key : value tal que "type1/2" : cant 
+    Se utilza solamente para la poblacion de la ultima generacion
+    """
+    frecuencia_tipos = {}
+    for equipo in poblacion:
+        for pokemon in equipo.pokemons:
+            # Verificar y contar type1 si no es None
+            if pokemon.type1 is not None:
+                if pokemon.type1 in frecuencia_tipos:
+                    frecuencia_tipos[pokemon.type1] += 1
+                else:
+                    frecuencia_tipos[pokemon.type1] = 1
+            # Verificar y contar type2 si no es None
+            if pokemon.type2 is not None:
+                if pokemon.type2 in frecuencia_tipos:
+                    frecuencia_tipos[pokemon.type2] += 1
+                else:
+                    frecuencia_tipos[pokemon.type2] = 1
+    
+    return frecuencia_tipos
+
+def cargar_csv_apariciones(cantidad_pokemones: dict[str, int], archivo: str, generacion: int):
+    with open(archivo, mode='a', newline='') as arch:
+        writer = csv.writer(arch)
+        
+        fila = [generacion+1]
+        for pokemon, cantidad in cantidad_pokemones.items():
+            fila.extend([cantidad, pokemon])
+        
+        writer.writerow(fila)
+
+def cargar_tipos_en_csv(diccionario_tipos: dict, name_archivo: str):
+    with open(name_archivo, mode='a', newline='') as archivo:  
+        escritor_csv = csv.writer(archivo)
+        for tipo, cantidad in diccionario_tipos.items():
+            escritor_csv.writerow([tipo, cantidad])
+    
+def escritura_best_teams(best_teams:list[Team],best_points:list[int],name_archivo:str,gen:int):
+    with open(name_archivo, mode ='a',newline='') as arch:
+        escritor_csv = csv.writer(arch)
+        for equipo, wins in zip(best_teams,best_points):
+            pokes_str = [poke.name for poke in equipo.pokemons]
+            escritor_csv.writerow([gen+1,wins,equipo.name]+ pokes_str)
+
+
+def algoritmo_completo(corte_seleccion: int, generaciones: int, lista_moves, pokemones, efectividad, poblacion, rivales):
+    for gen in tqdm(range(generaciones), desc="Procesando generaciones"):
+
+        nueva_poblacion, nuevos_rivales, dict_vict_combinadas = algoritmo_genetico(corte_seleccion, lista_moves, pokemones, efectividad, poblacion, rivales)
+        poblacion = nueva_poblacion
+        rivales = nuevos_rivales
+        mejores_10_nombres = list(dict_vict_combinadas.keys())[:10]
+        mejores_10_puntos = [dict_vict_combinadas[nombre] for nombre in mejores_10_nombres]
+        escritura_best_teams(mejores_10_nombres,mejores_10_puntos,"Best_teams_x_generation2.csv",gen)
+        dict_poke_cantidad = {}
+        dict_poke_cantidad = contar_cantidad_apariciones(poblacion,dict_poke_cantidad)
+        cargar_csv_apariciones(dict_poke_cantidad,"Cantidad_pokemones_x_gen2.csv",gen)
+        print(f'Generación {gen+1}')
+
+    return nueva_poblacion, nuevos_rivales, dict_vict_combinadas
