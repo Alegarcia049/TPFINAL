@@ -86,15 +86,16 @@ def select_kanto_champs()->str:
 
 def select_starter():
     pass
+
 def fight():
     draw_bg('battle_bg.jpg')
     while True:
         pygame.display.update()
 
-    pass
 
 def winner():
     pass
+
 def check_quit():
     pass
 
@@ -103,9 +104,9 @@ def main():
     clock = pygame.time.Clock()
     clock.tick(60)
     menu()
-    slected_champ = select_kanto_champs()
-    your_team = 
-    op_team = 
+    selected_champ = select_kanto_champs()
+    your_team = ('Pidgeot','Houndoom','Morelull','Salamence','Krookodile','Slaking')
+    op_team = kanto_teams[selected_champ]
 
     pygame.quit()
             
