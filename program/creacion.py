@@ -229,7 +229,7 @@ def algoritmo_genetico(poblacion, rivales, dicc_efectividad):
     
     return poblacion_seleccionada, rivales_prox_gen, victorias_combinadas_ordenadas
 
-def crear_archivo_best_teams(name_archivo:str):
+def crear_archivo_best_teams(name_archivo:str):  
     with open(name_archivo, mode = 'w',newline='') as archivo:
         escritor_csv = csv.writer(archivo)
         escritor_csv.writerow(['Generacion','Aptitud','Team Name','Starter','Pokemon1','Pokemon2','Pokemon3','Pokemon4','Pokemon5'])
