@@ -93,21 +93,6 @@ def crear_pokemon(pokemones: list[str], lista_moves: list):
         
         return Pokemon(pokedex_number, name, type1, type2, hp, attack, deffense, sp_attack, sp_defense, speed, generation, height, weight, is_legendary, obj_moves, level)
 
-        
-def crear_equipo(pokemones: list[str]):
-    equipo = []
-    pokemones_elegidos = set()
-
-    while len(equipo) < 6:
-        poke_number = random.randint(0, len(pokemones)-1)
-        if poke_number not in pokemones_elegidos:
-            pokemon_elegido = pokemones[poke_number]
-            pokemon_objeto = crear_pokemon(pokemon_elegido)
-            if not pokemon_objeto.is_legendary:
-                equipo.append(pokemon_objeto)
-                pokemones_elegidos.add(poke_number)
-
-    return Team('name',equipo)
                
 def crear_equipo(pokemones: list[str], lista_moves):
     equipo = []
