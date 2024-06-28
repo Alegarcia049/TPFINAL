@@ -10,7 +10,7 @@ pg.init()
 pg.display.set_caption('SIMU')
 
 POKE_LIST = [line.rstrip().split(',') for line in fun.lista_pokemones()] ### csv pokemon list with all info separeted for each pokemon
-EFFECTIVENESS = fun.create_effectiveness_dict()
+EFFECTIVENESS = fun.effectiveness_dic()
 MOVES = fun.lista_movimientos()
 
 SIZE = (1060, 596)
@@ -307,7 +307,7 @@ def display_winner(team: Team):
     wait_for_key_pressed()
     wait_for_no_keys()
     draw_bg('loading_bg.jpg')
-    display_message(team.name, (SIZE[0]//2, SIZE[1]//2-150), color=WHITE, rescale=2)
+    display_message(team.name.upper(), (SIZE[0]//2, SIZE[1]//2-150), color=WHITE, rescale=2)
     draw_pokemons_menu(team)
     wait_for_key_pressed()
     wait_for_no_keys()
