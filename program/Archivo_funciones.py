@@ -6,7 +6,6 @@ from combat import*
 from tqdm import tqdm
 import csv
 
-
 def lista_pokemones():
     """ 
     Funcion que abre el archivo csv con toda la info sobre pokemos y crea una lista de listas con cada pokemon, 
@@ -24,20 +23,6 @@ def lista_movimientos():
         lines.pop(0)
         return lines
     
-def create_effectiveness_dict()->dict[str, dict[str, float]]:
-    effectiveness = {}
-    with open('./data/effectiveness_chart.csv') as file:
-        defenders = file.readline().strip('\n').split(',')
-        defenders.pop(0)
-        line = file.readline()
-        while line != '':
-            line = line.strip('\n').split(',')
-            attacker = line.pop(0)
-            for n in range(len(line)): line[n] = float(line[n])
-            effectiveness[attacker] = {defender:dmg for defender, dmg in zip(defenders,line)}
-            line = file.readline()
-    return effectiveness
-
 def effectiveness_dic():
     with open('./data/effectiveness_chart.csv', 'r') as file:
         efectividad = file.readlines()[1:]
@@ -92,8 +77,7 @@ def crear_pokemon(pokemones: list[str], lista_moves: list):
         level = 50
         
         return Pokemon(pokedex_number, name, type1, type2, hp, attack, deffense, sp_attack, sp_defense, speed, generation, height, weight, is_legendary, obj_moves, level)
-
-               
+             
 def crear_equipo(pokemones: list[str], lista_moves):
     equipo = []
     while True:
@@ -132,19 +116,7 @@ def simu_batallas(poblacion, rivales, efectividad):
     return victorias_ordenadas
 
 def seleccion_mejores(corte_seleccion : int, poblacion : list[Team], victorias : dict[int], pokemones: list[str], lista_moves):
-    # Seleccionar los "X" mejores equipos
-    mejores_equipos = list(victorias.keys())[:corte_seleccion]
-
-    # Generar "X" equipos randoms (rellenar hasta armar una poblacion de 50)
-    nuevos_equipos = crear_poblaciones(50 - corte_seleccion, pokemones,lista_moves)
-
-    # Actualizar la poblacion
-    poblacion = mejores_equipos + nuevos_equipos
-    
-
-    return poblacion, mejores_equipos
-
-'''
+    '''
     #Extraigo los mejores "X" equipos del diccionario de victorias
     mejores_equipos = {key:value for i,(key,value) in enumerate(victorias.items()) if i < corte_seleccion}
     #Creo una nueva poblacion y agregos estos mejores equipos
@@ -158,6 +130,17 @@ def seleccion_mejores(corte_seleccion : int, poblacion : list[Team], victorias :
 
     return nueva_poblacion, futuros_rivales
 '''
+    # Seleccionar los "X" mejores equipos
+    mejores_equipos = list(victorias.keys())[:corte_seleccion]
+
+    # Generar "X" equipos randoms (rellenar hasta armar una poblacion de 50)
+    nuevos_equipos = crear_poblaciones(50 - corte_seleccion, pokemones,lista_moves)
+
+    # Actualizar la poblacion
+    poblacion = mejores_equipos + nuevos_equipos
+    
+
+    return poblacion, mejores_equipos
 
 def asegurar_unicos(nuevo_team, pokemones, lista_moves):
     nombres_vistos = set()
@@ -216,7 +199,6 @@ def imprimir_dict_equipos(dict_victorias):
         for pokemon in equipo.pokemons: 
             print(f"- {pokemon.name}")
 
-
 def mutar(equipo, pokemones,lista_moves):
     prob = random.random()
     lista_equipo = [pokemon.name for pokemon in equipo.pokemons]  # Lista de nombres de Pokémon en el equipo
@@ -256,7 +238,6 @@ def mutar_poblacion(poblacion, pokemones,lista_moves):
     
     return poblacion
 
-
 def algoritmo_genetico(corte_seleccion, lista_moves, pokemones, efectividad, poblacion, rivales):
     #Simulo las batallas y extraigo las estadisticas
     victorias = simu_batallas(poblacion,rivales,efectividad)
@@ -294,17 +275,19 @@ def crear_archivo_best_teams(name_archivo:str):
         escritor_csv = csv.writer(archivo)
         escritor_csv.writerow(['Generacion','Aptitud','Team Name','Starter','Pokemon1','Pokemon2','Pokemon3','Pokemon4','Pokemon5'])
 
+def escritura_best_teams(best_teams:list[Team],best_points:list[int],name_archivo:str,gen:int):
+    with open(name_archivo, mode ='a',newline='') as arch:
+        escritor_csv = csv.writer(arch)
+        for equipo, wins in zip(best_teams,best_points):
+            pokes_str = [poke.name for poke in equipo.pokemons]
+            escritor_csv.writerow([gen+1,wins,equipo.name]+ pokes_str)
+
 def crear_archivo_cant_pokemons(name_archivo:str):
     with open(name_archivo, mode = 'w',newline='') as archivo:
         escritor_csv = csv.writer(archivo)
         escritor_csv.writerow(['Generacion','Cantidad','Pokemon'])
 
-def crear_archivo_tipos(name_archivo:str):
-    with open(name_archivo, mode = 'w',newline='') as archivo:
-        escritor_csv = csv.writer(archivo)
-        escritor_csv.writerow(['Tipo','Cantidad'])
-
-def contar_cantidad_apariciones(poblacion:list[Team], cantidad_pokemons:dict):
+def contar_cantidad_apariciones(poblacion:list[Team], cantidad_pokemons:dict,archivo:str, generacion:int):
     """ 
     Parametros: Recibe una poblacion de pokemones y un diccionario vacio
     Cuenta la cantidad de apareciciones de pokemones en la poblacion y los carga al diccionario
@@ -317,7 +300,20 @@ def contar_cantidad_apariciones(poblacion:list[Team], cantidad_pokemons:dict):
                 cantidad_pokemons[pokemon.name] += 1
             else:
                 cantidad_pokemons[pokemon.name] = 1
-    return cantidad_pokemons
+    
+    with open(archivo, mode='a', newline='') as arch:
+        writer = csv.writer(arch)
+        
+        fila = [generacion+1]
+        for pokemon, cantidad in cantidad_pokemons.items():
+            fila.extend([cantidad, pokemon])
+        
+        writer.writerow(fila)  
+
+def crear_archivo_tipos(name_archivo:str):
+    with open(name_archivo, mode = 'w',newline='') as archivo:
+        escritor_csv = csv.writer(archivo)
+        escritor_csv.writerow(['Tipo','Cantidad'])
 
 def contar_frecuencia_tipos(poblacion: list[Team]):
     """ 
@@ -345,39 +341,21 @@ def contar_frecuencia_tipos(poblacion: list[Team]):
     
     return frecuencia_tipos
 
-def cargar_csv_apariciones(cantidad_pokemones: dict[str, int], archivo: str, generacion: int):
-    with open(archivo, mode='a', newline='') as arch:
-        writer = csv.writer(arch)
-        
-        fila = [generacion+1]
-        for pokemon, cantidad in cantidad_pokemones.items():
-            fila.extend([cantidad, pokemon])
-        
-        writer.writerow(fila)
-
 def cargar_tipos_en_csv(diccionario_tipos: dict, name_archivo: str):
     with open(name_archivo, mode='a', newline='') as archivo:  
         escritor_csv = csv.writer(archivo)
         for tipo, cantidad in diccionario_tipos.items():
             escritor_csv.writerow([tipo, cantidad])
     
-def escritura_best_teams(best_teams:list[Team],best_points:list[int],name_archivo:str,gen:int):
-    with open(name_archivo, mode ='a',newline='') as arch:
-        escritor_csv = csv.writer(arch)
-        for equipo, wins in zip(best_teams,best_points):
-            pokes_str = [poke.name for poke in equipo.pokemons]
-            escritor_csv.writerow([gen+1,wins,equipo.name]+ pokes_str)
-
-def escritura_best_team(name_archivo: str, dict_vict: dict):
+def escritura_mejor_team(name_archivo: str, dict_vict: dict):
     with open(name_archivo, mode = 'w',newline='') as archivo:
         escritor_csv = csv.writer(archivo)
         escritor_csv.writerow(['starter','pokemon1','pokemon2', 'pokemon2', 'pokemon3', 'pokemon4', 'pokemon5'])
-        best_team: Team = dict_vict.keys(0)
+        best_team = list(dict_vict.keys())[0]
         lista_pok = []
         for pokemon in best_team.pokemons:
-            lista_pok.extend(pokemon.name)
+            lista_pok.append(pokemon.name)
         escritor_csv.writerow(lista_pok)
-
 
 def algoritmo_completo(corte_seleccion: int, generaciones: int, lista_moves, pokemones, efectividad, poblacion, rivales):
     for gen in tqdm(range(generaciones), desc="Procesando generaciones"):
@@ -387,10 +365,10 @@ def algoritmo_completo(corte_seleccion: int, generaciones: int, lista_moves, pok
         rivales = nuevos_rivales
         mejores_10_nombres = list(dict_vict_combinadas.keys())[:10]
         mejores_10_puntos = [dict_vict_combinadas[nombre] for nombre in mejores_10_nombres]
-        escritura_best_teams(mejores_10_nombres,mejores_10_puntos,"Best_teams_x_generation3.csv",gen)
+        escritura_best_teams(mejores_10_nombres,mejores_10_puntos,"Best_teams_x_generation.csv",gen)
         dict_poke_cantidad = {}
-        dict_poke_cantidad = contar_cantidad_apariciones(poblacion,dict_poke_cantidad)
-        cargar_csv_apariciones(dict_poke_cantidad,"Cantidad_pokemones_x_gen3.csv",gen)
+        contar_cantidad_apariciones(poblacion,dict_poke_cantidad,"Cantidad_pokemones_x_gen.csv", gen)
+        
         print(f'Generación {gen+1}')
 
     return nueva_poblacion, nuevos_rivales, dict_vict_combinadas
