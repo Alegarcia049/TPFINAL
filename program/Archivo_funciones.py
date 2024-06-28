@@ -433,10 +433,9 @@ def algoritmo_completoMulti(corte_seleccion: int, generaciones: int, lista_moves
         rivales = nuevos_rivales
         mejores_10_nombres = list(dict_vict_combinadas.keys())[:10]
         mejores_10_puntos = [dict_vict_combinadas[nombre] for nombre in mejores_10_nombres]
-        escritura_best_teams(mejores_10_nombres,mejores_10_puntos,"Best_teams_x_generation3.csv",gen)
+        escritura_best_teams(mejores_10_nombres,mejores_10_puntos,"Best_teams_x_generation.csv",gen)
         dict_poke_cantidad = {}
-        dict_poke_cantidad = contar_cantidad_apariciones(poblacion,dict_poke_cantidad)
-        contar_cantidad_apariciones(poblacion,dict_poke_cantidad,"Cantidad_pokemones_x_gen3.csv", gen)
+        contar_cantidad_apariciones(poblacion,dict_poke_cantidad,"Cantidad_pokemones_x_gen.csv", gen)
         print(f'Generación {gen+1}')
 
     return nueva_poblacion, nuevos_rivales, dict_vict_combinadas
