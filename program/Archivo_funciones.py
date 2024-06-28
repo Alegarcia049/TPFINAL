@@ -399,3 +399,71 @@ def algoritmo_completo(corte_seleccion: int, generaciones: int, lista_moves, pok
         print(f'Generación {gen+1}')
 
     return nueva_poblacion, nuevos_rivales, dict_vict_combinadas
+
+
+#------------------------------------------------------------------------------------------------------------------------------------#
+#                                               FUNCIONES CON MULTIPROCESSING
+#------------------------------------------------------------------------------------------------------------------------------------#
+import multiprocessing
+
+def simu_batallas_paralelo(poblacion, rivales, efectividad, num_procesos):
+    with multiprocessing.Pool(processes=num_procesos) as pool:
+        args = [(equipo, rivales, efectividad) for equipo in poblacion]
+        resultados = pool.map(simu_batalla_individual, args)
+    
+    victorias = {equipo: cant_victorias for equipo, cant_victorias in resultados}
+    victorias_ordenadas = dict(sorted(victorias.items(), key=lambda item: item[1], reverse=True))
+    return victorias_ordenadas
+
+def simu_batalla_individual(args):
+    equipo, rivales, efectividad = args
+    cant_victorias = 0
+    for rival in rivales:
+        ganador = get_winner(equipo, rival, efectividad)
+        if ganador == equipo:
+            cant_victorias += 1
+    return equipo, cant_victorias
+
+def algoritmo_geneticoMulti(corte_seleccion, lista_moves, pokemones, efectividad, poblacion, rivales, num_procesos):
+    # Simulo las batallas y extraigo las estadísticas
+    victorias = simu_batallas_paralelo(poblacion, rivales, efectividad, num_procesos)
+
+    # Selecciono los "X" mejores equipos y completo la población con nuevos equipos aleatorios
+    nueva_poblacion, futuros_rivales = seleccion_mejores(corte_seleccion, poblacion, victorias, pokemones, lista_moves)
+
+    # Cruzo los pokemones de los equipos
+    poblacion_cruzada = cruza_equipos(nueva_poblacion, pokemones, lista_moves)
+
+    # Muto la población
+    poblacion_mutada = mutar_poblacion(poblacion_cruzada, pokemones, lista_moves)
+
+    # Simulo las batallas y extraigo estadísticas
+    victorias_mutacion = simu_batallas_paralelo(poblacion_mutada, rivales, efectividad, num_procesos)
+
+    # Combino las victorias de la población original y la mutada
+    victorias_combinadas = {**victorias, **victorias_mutacion}
+    victorias_combinadas_ordenadas = dict(sorted(victorias_combinadas.items(), key=lambda item: item[1], reverse=True))
+
+    # Selecciono la mejor población y próximos rivales
+    poblacion_seleccionada = list(victorias_combinadas_ordenadas.keys())[:50]
+
+    nuevos_rivales = crear_poblaciones(15, pokemones, lista_moves)
+    rivales_prox_gen = rivales[30:] + futuros_rivales[:15] + nuevos_rivales
+
+    return poblacion_seleccionada, rivales_prox_gen, victorias_combinadas_ordenadas
+
+def algoritmo_completoMulti(corte_seleccion: int, generaciones: int, lista_moves, pokemones, efectividad, poblacion, rivales,num_procesos):
+    for gen in tqdm(range(generaciones), desc="Procesando generaciones"):
+
+        nueva_poblacion, nuevos_rivales, dict_vict_combinadas = algoritmo_geneticoMulti(corte_seleccion, lista_moves, pokemones, efectividad, poblacion, rivales,num_procesos)
+        poblacion = nueva_poblacion
+        rivales = nuevos_rivales
+        mejores_10_nombres = list(dict_vict_combinadas.keys())[:10]
+        mejores_10_puntos = [dict_vict_combinadas[nombre] for nombre in mejores_10_nombres]
+        escritura_best_teams(mejores_10_nombres,mejores_10_puntos,"Best_teams_x_generation3.csv",gen)
+        dict_poke_cantidad = {}
+        dict_poke_cantidad = contar_cantidad_apariciones(poblacion,dict_poke_cantidad)
+        cargar_csv_apariciones(dict_poke_cantidad,"Cantidad_pokemones_x_gen3.csv",gen)
+        print(f'Generación {gen+1}')
+
+    return nueva_poblacion, nuevos_rivales, dict_vict_combinadas
