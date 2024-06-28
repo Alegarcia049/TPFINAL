@@ -1,11 +1,12 @@
 from pokemon import Pokemon
 from move import Move
 from team import Team
+import csv
 import combat
 import Archivo_funciones as fun
 from tqdm import tqdm
 
-self_team = ('Pidgeot','Houndoom','Morelull','Salamence','Krookodile','Slaking')
+
 kanto_teams = {
                 "Will": ("Bronzong", "Jynx", "Grumpig", "Slowbro", "Gardevoir", "Xatu"),
                 "Koga": ("Skunktank", "Toxicroak", "Swalot", "Venomoth", "Muk", "Crobat"),
@@ -18,7 +19,12 @@ lista_moves = fun.lista_movimientos()
 pokemones = fun.lista_pokemones()
 efectividad = fun.effectiveness_dic()
 
-def crear_movimientos(moves: list[str], lista_moves: list):
+def create_self_team(file_name: str)->Team:
+    with open(file_name, mode = 'r') as file:
+        team_line = file.readlines()[1].rstrip().split(',')
+    return team_por_nombre('Self', team_line)
+
+def crear_movimientos(moves: list[str], lista_moves: list)->list[Move]:
     lista_obj_moves = []
     for move in moves:
         #Busqueda lineal
@@ -33,7 +39,7 @@ def crear_movimientos(moves: list[str], lista_moves: list):
                 lista_obj_moves.append(Move(name, type1, category, pp, power, accuaracy))
     return lista_obj_moves 
 
-def crear_pokemon(indice,pokemones: list[str], lista_moves: list):
+def crear_pokemon(indice,pokemones: list[str], lista_moves: list)->Pokemon:
     while True:
         linea = pokemones[indice].rstrip()
         linea = linea.split(",")
@@ -58,7 +64,7 @@ def crear_pokemon(indice,pokemones: list[str], lista_moves: list):
         
         return Pokemon(pokedex_number, name, type1, type2, hp, attack, deffense, sp_attack, sp_defense, speed, generation, height, weight, is_legendary, obj_moves, level)
 
-def pokemon_por_nombre(nombre: str,pokemones,lista_moves):
+def pokemon_por_nombre(nombre: str, pokemones: list[str] = pokemones, lista_moves: list[list[str]]= lista_moves)->Pokemon:
     #Buscar indice
     indice = 0
     for i in range(len(pokemones)-1):
@@ -66,10 +72,10 @@ def pokemon_por_nombre(nombre: str,pokemones,lista_moves):
             indice = i
     return crear_pokemon(indice, pokemones, lista_moves)
 
-def team_por_nombre(nombre_equipo:str, lista_nombre: list[str], pokemones, lista_moves):
+def team_por_nombre(nombre_equipo:str, lista_nombre: list[str], pokemones: list[str] = pokemones, lista_moves: list[list[str]]= lista_moves)->Team:
     equipo = []
     for nombre in lista_nombre:
-        pokemon = pokemon_por_nombre(nombre, pokemones, lista_moves)
+        pokemon = pokemon_por_nombre(nombre)
         equipo.append(pokemon)
     return Team(nombre_equipo, equipo)
 

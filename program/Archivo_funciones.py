@@ -368,6 +368,16 @@ def escritura_best_teams(best_teams:list[Team],best_points:list[int],name_archiv
             pokes_str = [poke.name for poke in equipo.pokemons]
             escritor_csv.writerow([gen+1,wins,equipo.name]+ pokes_str)
 
+def escritura_best_team(name_archivo: str, dict_vict: dict):
+    with open(name_archivo, mode = 'w',newline='') as archivo:
+        escritor_csv = csv.writer(archivo)
+        escritor_csv.writerow(['starter','pokemon1','pokemon2', 'pokemon2', 'pokemon3', 'pokemon4', 'pokemon5'])
+        best_team: Team = dict_vict.keys(0)
+        lista_pok = []
+        for pokemon in best_team.pokemons:
+            lista_pok.extend(pokemon.name)
+        escritor_csv.writerow(lista_pok)
+
 
 def algoritmo_completo(corte_seleccion: int, generaciones: int, lista_moves, pokemones, efectividad, poblacion, rivales):
     for gen in tqdm(range(generaciones), desc="Procesando generaciones"):

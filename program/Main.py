@@ -36,6 +36,7 @@ ultima_poblacion, ultimos_rivales, dict_vict_finales = algoritmo_completo(corte_
 dict_tipos = contar_frecuencia_tipos(ultima_poblacion)
 dict_tipos_ordenado = dict(sorted(dict_tipos.items(), key=lambda item: item[1], reverse=True))
 cargar_tipos_en_csv(dict_tipos_ordenado,"Cantidad_tipo_ult_gen3.csv")
+escritura_best_team('best_team.csv', dict_vict_finales)
 
 
 
