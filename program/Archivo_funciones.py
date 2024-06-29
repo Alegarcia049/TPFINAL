@@ -356,6 +356,7 @@ def escritura_mejor_team(name_archivo: str, dict_vict: dict):
         for pokemon in best_team.pokemons:
             lista_pok.append(pokemon.name)
         escritor_csv.writerow(lista_pok)
+    return best_team
 
 def algoritmo_completo(corte_seleccion: int, generaciones: int, lista_moves, pokemones, efectividad, poblacion, rivales):
     for gen in tqdm(range(generaciones), desc="Procesando generaciones"):
@@ -373,6 +374,13 @@ def algoritmo_completo(corte_seleccion: int, generaciones: int, lista_moves, pok
 
     return nueva_poblacion, nuevos_rivales, dict_vict_combinadas
 
+def escritura_stats_best_team(best_team: Team, name_archivo: str):
+    with open(name_archivo, mode='w', newline='') as archivo:
+        escritor_csv = csv.writer(archivo)
+        escritor_csv.writerow(['Name','Max Hp', 'Attack', 'Defense', 'Sp.Attack', 'Sp.Defense', 'Speed'])
+        for pokemon in best_team.pokemons:
+            stats = [pokemon.name,pokemon.max_hp, pokemon.attack, pokemon.defense, pokemon.sp_attack, pokemon.sp_defense, pokemon.speed]
+            escritor_csv.writerow(stats)
 
 #------------------------------------------------------------------------------------------------------------------------------------#
 #                                               FUNCIONES CON MULTIPROCESSING
@@ -433,9 +441,9 @@ def algoritmo_completoMulti(corte_seleccion: int, generaciones: int, lista_moves
         rivales = nuevos_rivales
         mejores_10_nombres = list(dict_vict_combinadas.keys())[:10]
         mejores_10_puntos = [dict_vict_combinadas[nombre] for nombre in mejores_10_nombres]
-        escritura_best_teams(mejores_10_nombres,mejores_10_puntos,"Best_teams_x_generation.csv",gen)
+        escritura_best_teams(mejores_10_nombres,mejores_10_puntos,"Best_teams_x_generation2.csv",gen)
         dict_poke_cantidad = {}
-        contar_cantidad_apariciones(poblacion,dict_poke_cantidad,"Cantidad_pokemones_x_gen.csv", gen)
+        contar_cantidad_apariciones(poblacion,dict_poke_cantidad,"Cantidad_pokemones_x_gen2.csv", gen)
         print(f'Generación {gen+1}')
 
     return nueva_poblacion, nuevos_rivales, dict_vict_combinadas
