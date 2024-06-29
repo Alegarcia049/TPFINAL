@@ -28,9 +28,9 @@ if __name__ == '__main__':
     rivales = crear_poblaciones(cant_rivales , pokemones, lista_moves)
 
     #Creo los archivos de salida
-    crear_archivo_best_teams("Best_teams_x_generation2.csv")  
-    crear_archivo_cant_pokemons("Cantidad_pokemones_x_gen2.csv")
-    crear_archivo_tipos("Cantidad_tipo_ult_gen2.csv")
+    crear_archivo_best_teams("Best_teams_x_generation.csv")  
+    crear_archivo_cant_pokemons("Cantidad_pokemones_x_gen.csv")
+    crear_archivo_tipos("Cantidad_tipo_ult_gen.csv")
 
     #Ejecuto las generaciones del algoritmo genetico
     print("Comienza el algoritmo genetico")
@@ -39,11 +39,11 @@ if __name__ == '__main__':
 
     dict_tipos = contar_frecuencia_tipos(ultima_poblacion)
     dict_tipos_ordenado = dict(sorted(dict_tipos.items(), key=lambda item: item[1], reverse=True))
-    cargar_tipos_en_csv(dict_tipos_ordenado,"Cantidad_tipo_ult_gen2.csv")
+    cargar_tipos_en_csv(dict_tipos_ordenado,"Cantidad_tipo_ult_gen.csv")
 
     #Cargo el mejor equipo para pelear en el simulador
-    best_team = escritura_mejor_team('best_team2.csv', dict_vict_finales)
-    escritura_stats_best_team(best_team, 'mejor_equipo_stats2.csv')
+    best_team = escritura_mejor_team('best_team.csv', dict_vict_finales)
+    escritura_stats_best_team(best_team, 'mejor_equipo_stats.csv')
 
 
 
