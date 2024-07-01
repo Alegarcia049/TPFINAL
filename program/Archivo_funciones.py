@@ -156,8 +156,9 @@ def asegurar_unicos(nuevo_team, pokemones, lista_moves):
             print("bucle infito en repetidos")
         nuevo_pokemon = crear_pokemon(pokemones, lista_moves)
         if nuevo_pokemon.name not in nombres_vistos:
-            equipo_unico.append(nuevo_pokemon)
-            nombres_vistos.add(nuevo_pokemon.name)
+            if not pokemon.is_legendary:
+                equipo_unico.append(nuevo_pokemon)
+                nombres_vistos.add(nuevo_pokemon.name)
     return equipo_unico
 
 def cruza_equipos(poblacion, pokemones, lista_moves):
@@ -347,14 +348,14 @@ def cargar_tipos_en_csv(diccionario_tipos: dict, name_archivo: str):
         for tipo, cantidad in diccionario_tipos.items():
             escritor_csv.writerow([tipo, cantidad])
     
-def escritura_mejor_team(name_archivo: str, dict_vict: dict):
+def escritura_mejor_team(name_archivo: str, dict_vict: dict,):
     with open(name_archivo, mode = 'w',newline='') as archivo:
         escritor_csv = csv.writer(archivo)
         escritor_csv.writerow(['starter','pokemon1','pokemon2', 'pokemon2', 'pokemon3', 'pokemon4', 'pokemon5'])
         best_team = list(dict_vict.keys())[0]
         lista_pok = []
-        for pokemon in best_team.pokemons:
-            lista_pok.append(pokemon.name)
+        # for pokemon in best_team.pokemons:
+        lista_pok.append(pokemon.name)
         escritor_csv.writerow(lista_pok)
 
 def algoritmo_completo(corte_seleccion: int, generaciones: int, lista_moves, pokemones, efectividad, poblacion, rivales):
