@@ -92,7 +92,6 @@ def crear_pokemon(pokemones: list[str], lista_moves: list):
     Pokemon: Objeto de la clase Pokemon
 
     """
-
     while True:
         random_index = random.randint(0, len(pokemones)-1)
         linea = pokemones[random_index].rstrip()
@@ -116,8 +115,12 @@ def crear_pokemon(pokemones: list[str], lista_moves: list):
         obj_moves = crear_movimientos(moves,lista_moves)
         level = 50
         
-        return Pokemon(pokedex_number, name, type1, type2, hp, attack, deffense, sp_attack, sp_defense, speed, generation, height, weight, is_legendary, obj_moves, level)
-             
+        poke =  Pokemon(pokedex_number, name, type1, type2, hp, attack, deffense, sp_attack, sp_defense, speed, generation, height, weight, is_legendary, obj_moves, level)
+
+        if not poke.is_legendary:
+            return poke
+
+  
 def crear_equipo(pokemones: list[str], lista_moves):
     """
     Crea un equipo de 6 pokemones no legendarios y sin repetidos
@@ -241,9 +244,8 @@ def asegurar_unicos(nuevo_team, pokemones, lista_moves):
             print("bucle infito en repetidos")
         nuevo_pokemon = crear_pokemon(pokemones, lista_moves)
         if nuevo_pokemon.name not in nombres_vistos:
-            if not pokemon.is_legendary:
-                equipo_unico.append(nuevo_pokemon)
-                nombres_vistos.add(nuevo_pokemon.name)
+            equipo_unico.append(nuevo_pokemon)
+            nombres_vistos.add(nuevo_pokemon.name)
     return equipo_unico
 
 def cruza_equipos(poblacion, pokemones, lista_moves):
@@ -320,9 +322,9 @@ def mutar(equipo, pokemones,lista_moves):
         if tipo_mutacion == 1:
             # Cambiar el Pokémon inicial por un Pokémon aleatorio
             nuevo_pokemon = crear_pokemon(pokemones,lista_moves)
-    
             while nuevo_pokemon.name in lista_equipo:
                 nuevo_pokemon = crear_pokemon(pokemones,lista_moves)
+             
             equipo.pokemons[0] = nuevo_pokemon
             lista_equipo[0] = nuevo_pokemon.name  # Actualizar la lista de nombres
         elif tipo_mutacion == 2:
@@ -334,7 +336,6 @@ def mutar(equipo, pokemones,lista_moves):
             # Seleccionar un Pokémon aleatorio del equipo y cambiarlo por un Pokémon aleatorio
             indice = random.randint(0, 5)
             nuevo_pokemon = crear_pokemon(pokemones,lista_moves)
-            
             while nuevo_pokemon.name in lista_equipo:
                 nuevo_pokemon = crear_pokemon(pokemones,lista_moves)
             equipo.pokemons[indice] = nuevo_pokemon
@@ -527,8 +528,8 @@ def escritura_mejor_team(name_archivo: str, dict_vict: dict):
         escritor_csv.writerow(['starter','pokemon1','pokemon2', 'pokemon2', 'pokemon3', 'pokemon4', 'pokemon5'])
         best_team = list(dict_vict.keys())[0]
         lista_pok = []
-        # for pokemon in best_team.pokemons:
-        lista_pok.append(pokemon.name)
+        for pokemon in best_team.pokemons:
+            lista_pok.append(pokemon.name)
         escritor_csv.writerow(lista_pok)
     return best_team
 
@@ -586,6 +587,9 @@ import multiprocessing
 
 # Mismas funciones pero con multiprocessing para acelerar la ejecucion del codigo
 
+""" Si se desea correr el codigo con multiprocessing, se debe unicamente cambiar en el main la funcion "agortimo_completo" por 
+"algorimo_completoMulti" y agregar al final como parametro de entrada de la funcion "num_procesos" """
+
 def simu_batallas_paralelo(poblacion, rivales, efectividad, num_procesos):
     with multiprocessing.Pool(processes=num_procesos) as pool:
         args = [(equipo, rivales, efectividad) for equipo in poblacion]
@@ -633,6 +637,22 @@ def algoritmo_geneticoMulti(corte_seleccion, lista_moves, pokemones, efectividad
     return poblacion_seleccionada, rivales_prox_gen, victorias_combinadas_ordenadas
 
 def algoritmo_completoMulti(corte_seleccion: int, generaciones: int, lista_moves, pokemones, efectividad, poblacion, rivales,num_procesos):
+    '''
+    Implementa el algoritmo genético para la evolución de los equipos de pokemones
+    Parameters:
+    corte_seleccion (int): Cantidad de equipos a seleccionar
+    generaciones (int): Cantidad de generaciones
+    lista_moves (list): Lista de datos de movimientos
+    pokemones (list[str]): Lista de datos de pokemones
+    efectividad (dict[str, dict[str, float]]): Diccionario con la efectividad de los tipos de pokemones
+    poblacion (list[Team]): Lista de equipos de pokemones
+    rivales (list[Team]): Lista de equipos de pokemones rivales
+
+    Returns:
+    list[Team]: Lista de equipos de pokemones
+    list[Team]: Lista de equipos de pokemones rivales
+    dict[Team, int]: Diccionario con la cantidad de victorias de cada equipo ordenadas de mayor a menor
+    '''
     for gen in tqdm(range(generaciones), desc="Procesando generaciones"):
 
         nueva_poblacion, nuevos_rivales, dict_vict_combinadas = algoritmo_geneticoMulti(corte_seleccion, lista_moves, pokemones, efectividad, poblacion, rivales,num_procesos)

@@ -14,7 +14,7 @@ if __name__ == '__main__':
     cant_rivales  = 400
     corte_seleccion = 25
     generaciones = 50
-    num_procesos = multiprocessing.cpu_count()
+    num_procesos = multiprocessing.cpu_count() #Si se desea ejecutar con multiprocessing ir a linea 584 del archivo funciones
 
 
     #Extraigo la lista de pokemos y movimientos del arhivo CSV. Y la tabla de efectividad    
@@ -34,7 +34,7 @@ if __name__ == '__main__':
 
     #Ejecuto las generaciones del algoritmo genetico
     print("Comienza el algoritmo genetico")
-    ultima_poblacion, ultimos_rivales, dict_vict_finales = algoritmo_completoMulti(corte_seleccion,generaciones,lista_moves,pokemones,efectividad,poblacion,rivales,num_procesos)
+    ultima_poblacion, ultimos_rivales, dict_vict_finales = algoritmo_completo(corte_seleccion,generaciones,lista_moves,pokemones,efectividad,poblacion,rivales)
 
 
     dict_tipos = contar_frecuencia_tipos(ultima_poblacion)
@@ -42,7 +42,7 @@ if __name__ == '__main__':
     cargar_tipos_en_csv(dict_tipos_ordenado,"Cantidad_tipo_ult_gen.csv")
 
     #Cargo el mejor equipo para pelear en el simulador
-    best_team = escritura_mejor_team('best_team.csv', dict_vict_finales)
+    best_team = escritura_mejor_team('best_team6.csv', dict_vict_finales)
     escritura_stats_best_team(best_team, 'mejor_equipo_stats.csv')
 
 
