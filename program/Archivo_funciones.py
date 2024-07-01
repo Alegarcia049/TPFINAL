@@ -8,8 +8,10 @@ import csv
 
 def lista_pokemones():
     """ 
-    Funcion que abre el archivo csv con toda la info sobre pokemos y crea una lista de listas con cada pokemon, 
-    para podes trabajarlos comodamente en el resto del codigo.
+    Lee el archivo pokemons.csv y devuelve una lista con los datos de los pokemones
+
+    Returns:
+    list[str]: Lista de strings con los datos de los pokemones
 
     """
     with open("./data/pokemons.csv",mode="r") as arch:
@@ -18,12 +20,27 @@ def lista_pokemones():
         return lines
 
 def lista_movimientos():
+    """
+    Lee el archivo moves.csv y devuelve una lista con los datos de los movimientos
+
+    Returns:
+    list[str]: Lista de strings con los datos de los movimientos
+
+    """
+
     with open("./data/moves.csv",mode="r") as arch:
         lines = [line.rstrip().split(",") for line in arch]
         lines.pop(0)
         return lines
     
 def effectiveness_dic():
+    """
+    Lee el archivo effectiveness_chart.csv y devuelve un diccionario con la efectividad de los tipos de pokemones
+
+    Returns:
+    dict[str, dict[str, float]]: Diccionario con la efectividad de los tipos de pokemones
+
+    """
     with open('./data/effectiveness_chart.csv', 'r') as file:
         efectividad = file.readlines()[1:]
     effectiveness_dict = {}
@@ -38,6 +55,17 @@ def effectiveness_dic():
     return effectiveness_dict
 
 def crear_movimientos(moves: list[str], lista_moves: list):
+    """
+    Crea una lista de objetos de la clase Move a partir de una lista de nombres de movimientos y una lista de datos de movimientos
+
+    Parameters:
+    moves (list[str]): Lista de nombres de movimientos
+    lista_moves (list): Lista de datos de movimientos
+
+    Returns:
+    list[Move]: Lista de objetos de la clase Move
+
+    """
     lista_obj_moves = []
     for move in moves:
         #Busqueda lineal
@@ -53,6 +81,18 @@ def crear_movimientos(moves: list[str], lista_moves: list):
     return lista_obj_moves
 
 def crear_pokemon(pokemones: list[str], lista_moves: list):
+    """
+    Crea un objeto de la clase Pokemon a partir de una lista de datos de pokemones y una lista de datos de movimientos
+    
+    Parameters:
+    pokemones (list[str]): Lista de datos de pokemones
+    lista_moves (list): Lista de datos de movimientos
+
+    Returns:
+    Pokemon: Objeto de la clase Pokemon
+
+    """
+
     while True:
         random_index = random.randint(0, len(pokemones)-1)
         linea = pokemones[random_index].rstrip()
@@ -79,6 +119,17 @@ def crear_pokemon(pokemones: list[str], lista_moves: list):
         return Pokemon(pokedex_number, name, type1, type2, hp, attack, deffense, sp_attack, sp_defense, speed, generation, height, weight, is_legendary, obj_moves, level)
              
 def crear_equipo(pokemones: list[str], lista_moves):
+    """
+    Crea un equipo de 6 pokemones no legendarios y sin repetidos
+
+    Parameters:
+    pokemones (list[str]): Lista de datos de pokemones
+    lista_moves (list): Lista de datos de movimientos
+    
+    Returns:
+    Team: Objeto de la clase Team
+    
+    """
     equipo = []
     while True:
         if len(equipo) == 6:
@@ -94,6 +145,18 @@ def crear_equipo(pokemones: list[str], lista_moves):
     return Team("Name",equipo)
 
 def crear_poblaciones(cant_equipos: int, pokemones:list[str], lista_moves):
+    """
+    Crea una población de equipos de pokemones
+
+    Parameters:
+    cant_equipos (int): Cantidad de equipos a crear
+    pokemones (list[str]): Lista de datos de pokemones
+    lista_moves (list): Lista de datos de movimientos
+    
+    Returns:
+    list[Team]: Lista de objetos de la clase Team
+
+    """
     poblacion = []
     for i in range(cant_equipos):
         equipo = crear_equipo(pokemones, lista_moves)
@@ -102,6 +165,18 @@ def crear_poblaciones(cant_equipos: int, pokemones:list[str], lista_moves):
     return poblacion
 
 def simu_batallas(poblacion, rivales, efectividad):
+    """
+    Simula las batallas entre los equipos de la población y los rivales
+
+    Parameters:
+    poblacion (list[Team]): Lista de equipos de pokemones
+    rivales (list[Team]): Lista de equipos de pokemones rivales
+    efectividad (dict[str, dict[str, float]]): Diccionario con la efectividad de los tipos de pokemones
+
+    Returns:
+    dict[Team, int]: Diccionario con la cantidad de victorias de cada equipo ordenadas de mayor a menor
+    
+    """
     victorias = {}
 
     for equipo in poblacion:
@@ -117,19 +192,19 @@ def simu_batallas(poblacion, rivales, efectividad):
 
 def seleccion_mejores(corte_seleccion : int, poblacion : list[Team], victorias : dict[int], pokemones: list[str], lista_moves):
     '''
-    #Extraigo los mejores "X" equipos del diccionario de victorias
-    mejores_equipos = {key:value for i,(key,value) in enumerate(victorias.items()) if i < corte_seleccion}
-    #Creo una nueva poblacion y agregos estos mejores equipos
-    nueva_poblacion = [key for key in mejores_equipos.keys()]
-    #Extraigo los 20 mejores para futuros rivales
-    futuros_rivales = nueva_poblacion[:15]
-    #Completamos la poblacion a 50
-    relleno = crear_poblaciones(50-corte_seleccion , pokemones, lista_moves)
-    for equipo in relleno:
-        nueva_poblacion.append(equipo)
+    Selecciona los "X" mejores equipos de la poblacion y completa la poblacion con nuevos equipos randoms
+    Parameters:
+    corte_seleccion (int): Cantidad de equipos a seleccionar
+    poblacion (list[Team]): Lista de equipos de pokemones
+    victorias (dict[int]): Diccionario con la cantidad de victorias de cada equipo
+    pokemones (list[str]): Lista de datos de pokemones
+    lista_moves (list): Lista de datos de movimientos
 
-    return nueva_poblacion, futuros_rivales
-'''
+    Returns:
+    list[Team]: Lista de equipos de pokemones
+    list[Team]: Lista de los "X" mejores equipos
+    '''
+
     # Seleccionar los "X" mejores equipos
     mejores_equipos = list(victorias.keys())[:corte_seleccion]
 
@@ -143,6 +218,16 @@ def seleccion_mejores(corte_seleccion : int, poblacion : list[Team], victorias :
     return poblacion, mejores_equipos
 
 def asegurar_unicos(nuevo_team, pokemones, lista_moves):
+    '''
+    Asegura que el equipo tenga 6 pokemones unicos
+    Parameters:
+    nuevo_team (list[Pokemon]): Lista de pokemones
+    pokemones (list[str]): Lista de datos de pokemones
+    lista_moves (list): Lista de datos de movimientos
+
+    Returns:
+    list[Pokemon]: Lista de pokemones unicos
+    '''
     nombres_vistos = set()
     equipo_unico = []
     for pokemon in nuevo_team:
@@ -162,6 +247,16 @@ def asegurar_unicos(nuevo_team, pokemones, lista_moves):
     return equipo_unico
 
 def cruza_equipos(poblacion, pokemones, lista_moves):
+    '''
+    Cruza los pokemones de los equipos de la poblacion con una probabilidad del 70%
+    Parameters:
+    poblacion (list[Team]): Lista de equipos de pokemones
+    pokemones (list[str]): Lista de datos de pokemones
+    lista_moves (list): Lista de datos de movimientos
+
+    Returns:
+    list[Team]: Lista de equipos de pokemones cruzados
+    '''
     poblacion_cruzada = []
     while len(poblacion) > 1:
         # Extraigo dos equipos randoms de la poblacion
@@ -194,6 +289,12 @@ def cruza_equipos(poblacion, pokemones, lista_moves):
     return poblacion_cruzada
 
 def imprimir_dict_equipos(dict_victorias):
+    '''
+    Funcion auxiliar para el desarrollo del TP
+    Imprime los equipos y sus victorias
+    Parameters:
+    dict_victorias (dict[Team, int]): Diccionario con la cantidad de victorias de cada equipo
+    '''
     for equipo, victorias in dict_victorias.items():
         print(f"Equipo: {equipo.name}, Victorias: {victorias}")
         print("Pokémon en el equipo:")
@@ -201,6 +302,16 @@ def imprimir_dict_equipos(dict_victorias):
             print(f"- {pokemon.name}")
 
 def mutar(equipo, pokemones,lista_moves):
+    '''
+    Muta un equipo de pokemones con una probabilidad del 3%
+    Parameters:
+    equipo (Team): Equipo de pokemones
+    pokemones (list[str]): Lista de datos de pokemones
+    lista_moves (list): Lista de datos de movimientos
+
+    Returns:
+    Team: Equipo de pokemones mutado
+    '''
     prob = random.random()
     lista_equipo = [pokemon.name for pokemon in equipo.pokemons]  # Lista de nombres de Pokémon en el equipo
     if prob <= 0.03:
@@ -232,6 +343,16 @@ def mutar(equipo, pokemones,lista_moves):
     return equipo
 
 def mutar_poblacion(poblacion, pokemones,lista_moves):
+    '''
+    Muta la poblacion de equipos de pokemones
+    Parameters:
+    poblacion (list[Team]): Lista de equipos de pokemones
+    pokemones (list[str]): Lista de datos de pokemones
+    lista_moves (list): Lista de datos de movimientos
+    
+    Returns:
+    list[Team]: Lista de equipos de pokemones mutados
+    '''
     
     for i in range(len(poblacion)):
         
@@ -240,6 +361,21 @@ def mutar_poblacion(poblacion, pokemones,lista_moves):
     return poblacion
 
 def algoritmo_genetico(corte_seleccion, lista_moves, pokemones, efectividad, poblacion, rivales):
+    '''
+    Implementa el algoritmo genético para la evolución de los equipos de pokemones
+    Parameters:
+    corte_seleccion (int): Cantidad de equipos a seleccionar
+    lista_moves (list): Lista de datos de movimientos
+    pokemones (list[str]): Lista de datos de pokemones
+    efectividad (dict[str, dict[str, float]]): Diccionario con la efectividad de los tipos de pokemones
+    poblacion (list[Team]): Lista de equipos de pokemones
+    rivales (list[Team]): Lista de equipos de pokemones rivales
+
+    Returns:
+    list[Team]: Lista de equipos de pokemones
+    list[Team]: Lista de equipos de pokemones rivales
+    dict[Team, int]: Diccionario con la cantidad de victorias de cada equipo ordenadas de mayor a menor
+    '''
     #Simulo las batallas y extraigo las estadisticas
     victorias = simu_batallas(poblacion,rivales,efectividad)
     # print("Primeras victorias",victorias)
@@ -272,11 +408,24 @@ def algoritmo_genetico(corte_seleccion, lista_moves, pokemones, efectividad, pob
     return poblacion_seleccionada, rivales_prox_gen, victorias_combinadas_ordenadas
 
 def crear_archivo_best_teams(name_archivo:str):
+    '''
+    Crea un archivo CSV con el nombre de los equipos y sus pokemones
+    Parameters:
+    name_archivo (str): Nombre del archivo
+    '''
     with open(name_archivo, mode = 'w',newline='') as archivo:
         escritor_csv = csv.writer(archivo)
         escritor_csv.writerow(['Generacion','Aptitud','Team Name','Starter','Pokemon1','Pokemon2','Pokemon3','Pokemon4','Pokemon5'])
 
 def escritura_best_teams(best_teams:list[Team],best_points:list[int],name_archivo:str,gen:int):
+    '''
+    Escribe en un archivo CSV los mejores equipos de la generacion
+    Parameters:
+    best_teams (list[Team]): Lista de equipos de pokemones
+    best_points (list[int]): Lista de puntos de los equipos
+    name_archivo (str): Nombre del archivo
+    gen (int): Numero de la generacion
+    '''
     with open(name_archivo, mode ='a',newline='') as arch:
         escritor_csv = csv.writer(arch)
         for equipo, wins in zip(best_teams,best_points):
@@ -284,6 +433,11 @@ def escritura_best_teams(best_teams:list[Team],best_points:list[int],name_archiv
             escritor_csv.writerow([gen+1,wins,equipo.name]+ pokes_str)
 
 def crear_archivo_cant_pokemons(name_archivo:str):
+    '''
+    Crea un archivo CSV con la cantidad de pokemones de cada generacion
+    Parameters:
+    name_archivo (str): Nombre del archivo
+    '''
     with open(name_archivo, mode = 'w',newline='') as archivo:
         escritor_csv = csv.writer(archivo)
         escritor_csv.writerow(['Generacion','Cantidad','Pokemon'])
@@ -312,6 +466,12 @@ def contar_cantidad_apariciones(poblacion:list[Team], cantidad_pokemons:dict,arc
         writer.writerow(fila)  
 
 def crear_archivo_tipos(name_archivo:str):
+    '''
+    Crea un archivo CSV con la cantidad de pokemones de cada tipo de la ultima generacion
+    Parameters:
+    name_archivo (str): Nombre del archivo
+    '''
+
     with open(name_archivo, mode = 'w',newline='') as archivo:
         escritor_csv = csv.writer(archivo)
         escritor_csv.writerow(['Tipo','Cantidad'])
@@ -343,12 +503,25 @@ def contar_frecuencia_tipos(poblacion: list[Team]):
     return frecuencia_tipos
 
 def cargar_tipos_en_csv(diccionario_tipos: dict, name_archivo: str):
+    """
+    Carga los tipos de pokemones y su cantidad en un archivo CSV
+    Parameters:
+    diccionario_tipos (dict): Diccionario con la cantidad de pokemones de cada tipo
+    name_archivo (str): Nombre del archivo
+    """
     with open(name_archivo, mode='a', newline='') as archivo:  
         escritor_csv = csv.writer(archivo)
         for tipo, cantidad in diccionario_tipos.items():
             escritor_csv.writerow([tipo, cantidad])
     
-def escritura_mejor_team(name_archivo: str, dict_vict: dict,):
+def escritura_mejor_team(name_archivo: str, dict_vict: dict):
+    """
+    Escribe en un archivo CSV el mejor equipo de la ultima generacion
+    Parameters:
+    name_archivo (str): Nombre del archivo
+    dict_vict (dict): Diccionario con la cantidad de victorias de cada equipo
+    """
+
     with open(name_archivo, mode = 'w',newline='') as archivo:
         escritor_csv = csv.writer(archivo)
         escritor_csv.writerow(['starter','pokemon1','pokemon2', 'pokemon2', 'pokemon3', 'pokemon4', 'pokemon5'])
@@ -357,8 +530,25 @@ def escritura_mejor_team(name_archivo: str, dict_vict: dict,):
         # for pokemon in best_team.pokemons:
         lista_pok.append(pokemon.name)
         escritor_csv.writerow(lista_pok)
+    return best_team
 
 def algoritmo_completo(corte_seleccion: int, generaciones: int, lista_moves, pokemones, efectividad, poblacion, rivales):
+    '''
+    Implementa el algoritmo genético para la evolución de los equipos de pokemones
+    Parameters:
+    corte_seleccion (int): Cantidad de equipos a seleccionar
+    generaciones (int): Cantidad de generaciones
+    lista_moves (list): Lista de datos de movimientos
+    pokemones (list[str]): Lista de datos de pokemones
+    efectividad (dict[str, dict[str, float]]): Diccionario con la efectividad de los tipos de pokemones
+    poblacion (list[Team]): Lista de equipos de pokemones
+    rivales (list[Team]): Lista de equipos de pokemones rivales
+
+    Returns:
+    list[Team]: Lista de equipos de pokemones
+    list[Team]: Lista de equipos de pokemones rivales
+    dict[Team, int]: Diccionario con la cantidad de victorias de cada equipo ordenadas de mayor a menor
+    '''
     for gen in tqdm(range(generaciones), desc="Procesando generaciones"):
 
         nueva_poblacion, nuevos_rivales, dict_vict_combinadas = algoritmo_genetico(corte_seleccion, lista_moves, pokemones, efectividad, poblacion, rivales)
@@ -374,11 +564,27 @@ def algoritmo_completo(corte_seleccion: int, generaciones: int, lista_moves, pok
 
     return nueva_poblacion, nuevos_rivales, dict_vict_combinadas
 
+def escritura_stats_best_team(best_team: Team, name_archivo: str):
+    """
+    Escribe en un archivo CSV las estadísticas del mejor equipo de la última generación
+    Parameters:
+    best_team (Team): Mejor equipo de la última generación
+    name_archivo (str): Nombre del archivo
+    """
+
+    with open(name_archivo, mode='w', newline='') as archivo:
+        escritor_csv = csv.writer(archivo)
+        escritor_csv.writerow(['Name','Max Hp', 'Attack', 'Defense', 'Sp.Attack', 'Sp.Defense', 'Speed'])
+        for pokemon in best_team.pokemons:
+            stats = [pokemon.name,pokemon.max_hp, pokemon.attack, pokemon.defense, pokemon.sp_attack, pokemon.sp_defense, pokemon.speed]
+            escritor_csv.writerow(stats)
 
 #------------------------------------------------------------------------------------------------------------------------------------#
 #                                               FUNCIONES CON MULTIPROCESSING
 #------------------------------------------------------------------------------------------------------------------------------------#
 import multiprocessing
+
+# Mismas funciones pero con multiprocessing para acelerar la ejecucion del codigo
 
 def simu_batallas_paralelo(poblacion, rivales, efectividad, num_procesos):
     with multiprocessing.Pool(processes=num_procesos) as pool:
